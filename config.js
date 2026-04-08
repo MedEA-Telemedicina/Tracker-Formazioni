@@ -10,19 +10,20 @@ const CONFIG = {
   SCOPES: 'https://www.googleapis.com/auth/calendar.readonly',
 
   // Mappatura colori Google Calendar -> Operatori
-  // Fonte: https://developers.google.com/calendar/api/v3/reference/colors
+  // ID ufficiali Google Calendar API:
+  // 1=Lavanda, 2=Salvia, 3=Vinaccia/Uva, 4=Fenicottero, 5=Banana,
+  // 6=Mandarino, 7=Pavone, 8=Mirtillo, 9=Basilico, 10=Pomodoro, 11=Grafite
   OPERATORI: {
-    '11': { nome: 'FABIO CATALDI',       colore: 'Pomodoro',   hex: '#DC2127' },
-    '6':  { nome: 'GIOVANNI CAFARO',     colore: 'Fenicottero', hex: '#F691B2' },
-    '6':  { nome: 'GIOVANNI CAFARO',     colore: 'Fenicottero', hex: '#F691B2' },
-    '3':  { nome: 'VITO PALLADINO',      colore: 'Mandarino',  hex: '#F6BF26' },  // Banana/Mandarino da verificare
-    '5':  { nome: 'ANTONIO EQUESTRE',    colore: 'Banana',     hex: '#51B749' },
-    '10': { nome: 'CARMINE CALOCERO',    colore: 'Salvia',     hex: '#0B8043' },
-    '9':  { nome: 'WILLIAM POTENZA',     colore: 'Mirtillo',   hex: '#7986CB' },
-    '8':  { nome: '(da assegnare)',       colore: 'Pavone',     hex: '#039BE5' },
-    '1':  { nome: 'ANGELA LIONE',        colore: 'Lavanda',    hex: '#9FC6E7' },
-    '7':  { nome: 'ROSY PIA CAVUOTI',    colore: 'Vinaccia',   hex: '#616161' },
-    '8':  { nome: 'GIANMARCO PALAZZO',   colore: 'Grafite',    hex: '#616161' },
+    '10': { nome: 'FABIO CATALDI',      colore: 'Pomodoro',    hex: '#D50000' },
+    '4':  { nome: 'GIOVANNI CAFARO',    colore: 'Fenicottero', hex: '#F4511E' },
+    '6':  { nome: 'VITO PALLADINO',     colore: 'Mandarino',   hex: '#F6BF26' },
+    '5':  { nome: 'ANTONIO EQUESTRE',   colore: 'Banana',      hex: '#F6BF26' },
+    '2':  { nome: 'CARMINE CALOCERO',   colore: 'Salvia',      hex: '#33B679' },
+    '8':  { nome: 'WILLIAM POTENZA',    colore: 'Mirtillo',    hex: '#3F51B5' },
+    '7':  { nome: '(da assegnare)',      colore: 'Pavone',      hex: '#039BE5' },
+    '1':  { nome: 'ANGELA LIONE',       colore: 'Lavanda',     hex: '#7986CB' },
+    '3':  { nome: 'ROSY PIA CAVUOTI',   colore: 'Vinaccia',    hex: '#8E24AA' },
+    '11': { nome: 'GIANMARCO PALAZZO',  colore: 'Grafite',     hex: '#616161' },
   },
 
   // Durata minima per 1 punto formazione (in minuti)
