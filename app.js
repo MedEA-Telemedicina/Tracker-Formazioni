@@ -5,16 +5,16 @@
 // --- Mappatura Colore Google Calendar → Operatore ---
 // I colorId sono quelli restituiti dall'API Google Calendar v3
 const OPERATORS = {
-    '11': { name: 'FABIO CATALDI',        colorName: 'Pomodoro',     hex: '#D50000' },
+    '10': { name: 'FABIO CATALDI',        colorName: 'Pomodoro',     hex: '#D50000' },
     '4':  { name: 'GIOVANNI CAFARO',      colorName: 'Fenicottero',  hex: '#E67C73' },
     '6':  { name: 'VITO PALLADINO',       colorName: 'Mandarino',    hex: '#F4511E' },
     '5':  { name: 'ANTONIO EQUESTRE',     colorName: 'Banana',       hex: '#F6BF26' },
     '2':  { name: 'CARMINE CALOCERO',     colorName: 'Salvia',       hex: '#33B679' },
-    '9':  { name: 'WILLIAM POTENZA',      colorName: 'Mirtillo',     hex: '#3F51B5' },
+    '8':  { name: 'WILLIAM POTENZA',      colorName: 'Mirtillo',     hex: '#3F51B5' },
     '7':  { name: 'Da Associare',         colorName: 'Pavone',       hex: '#039BE5' },
     '1':  { name: 'ANGELA LIONE',         colorName: 'Lavanda',      hex: '#7986CB' },
     '3':  { name: 'ROSY PIA CAVUOTI',     colorName: 'Vinaccia',     hex: '#8E24AA' },
-    '8':  { name: 'GIANMARCO PALAZZO',    colorName: 'Grafite',      hex: '#616161' },
+    '11': { name: 'GIANMARCO PALAZZO',    colorName: 'Grafite',      hex: '#616161' },
 };
 
 // --- Nomi dei mesi in italiano ---
@@ -43,8 +43,8 @@ function initApp() {
         return;
     }
 
-    tokenClient = google.accounts.oauth2.initTokenModel({
-        client_id: CONFIG.clientId,
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CONFIG.CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/calendar.readonly',
         callback: handleTokenResponse,
     });
