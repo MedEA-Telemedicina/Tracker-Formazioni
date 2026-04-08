@@ -1,0 +1,1169 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Tracker Formazioni</title>
+    <meta name="description" content="Dashboard per il monitoraggio delle formazioni da Google Calendar">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
+
+<style>
+/* ============================================================
+   Tracker Formazioni - Stili
+   ============================================================ */
+
+:root {
+    --bg: #f0f2f5;
+    --card-bg: #ffffff;
+    --text-primary: #1a1a2e;
+    --text-secondary: #555;
+    --text-muted: #999;
+    --border: #e4e6ea;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.1);
+    --radius: 14px;
+    --radius-sm: 8px;
+    --header-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    line-height: 1.5;
+}
+
+/* ============================================================
+   LOGIN SCREEN
+   ============================================================ */
+
+#login-screen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: var(--header-bg);
+    padding: 1rem;
+}
+
+.login-card {
+    background: white;
+    padding: 3rem 2.5rem;
+    border-radius: var(--radius);
+    text-align: center;
+    max-width: 420px;
+    width: 100%;
+    box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+    animation: fadeIn 0.5s ease;
+}
+
+.login-icon { font-size: 3.5rem; margin-bottom: 1rem; display: block; }
+
+.login-card h1 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.login-card p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+#login-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 0.85rem 2rem;
+    background: #4285f4;
+    color: white;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    min-width: 220px;
+}
+
+#login-btn:hover {
+    background: #3367d6;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px rgba(66, 133, 244, 0.4);
+}
+
+#login-btn:active { transform: translateY(0); }
+.login-btn-icon { width: 20px; height: 20px; }
+
+.login-note {
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+/* ============================================================
+   HEADER
+   ============================================================ */
+
+header {
+    background: var(--header-bg);
+    color: white;
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.header-left { display: flex; align-items: center; gap: 0.75rem; }
+.header-left h1 { font-size: 1.15rem; font-weight: 600; white-space: nowrap; }
+.header-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+
+header button, header select {
+    padding: 0.45rem 0.85rem;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-family: inherit;
+    transition: background var(--transition);
+    white-space: nowrap;
+}
+
+header button:hover, header select:hover { background: rgba(255, 255, 255, 0.2); }
+
+header select {
+    max-width: 200px;
+    -webkit-appearance: none;
+    appearance: none;
+    padding-right: 1.5rem;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+}
+
+header select option { background: #1a1a2e; color: white; }
+
+#logout-btn { border-color: rgba(255, 100, 100, 0.4); background: rgba(255, 100, 100, 0.15); }
+#logout-btn:hover { background: rgba(255, 100, 100, 0.3); }
+
+/* ============================================================
+   MONTH NAVIGATION
+   ============================================================ */
+
+.controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.25rem;
+    padding: 1.5rem 1rem 0.75rem;
+}
+
+.controls h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    min-width: 220px;
+    text-align: center;
+    user-select: none;
+}
+
+.nav-btn {
+    width: 42px; height: 42px;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition);
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.nav-btn:hover {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+    transform: scale(1.05);
+}
+
+.nav-btn:active { transform: scale(0.95); }
+
+.today-btn {
+    padding: 0.4rem 1rem;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    color: var(--text-secondary);
+}
+
+.today-btn:hover { background: var(--text-primary); color: white; border-color: var(--text-primary); }
+
+/* ============================================================
+   SUMMARY BAR
+   ============================================================ */
+
+#summary-bar {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    margin: 0.75rem 1.5rem 1.25rem;
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: opacity var(--transition);
+}
+
+.summary-item {
+    text-align: center;
+    padding: 1rem 2rem;
+    flex: 1;
+    border-right: 1px solid var(--border);
+}
+
+.summary-item:last-child { border-right: none; }
+
+.summary-label {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    font-weight: 500;
+    margin-bottom: 0.3rem;
+}
+
+.summary-value {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    line-height: 1.2;
+}
+
+/* ============================================================
+   OPERATORS GRID
+   ============================================================ */
+
+#operators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+    padding: 0 1.5rem 2rem;
+}
+
+/* ============================================================
+   OPERATOR CARD
+   ============================================================ */
+
+.operator-card {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    transition: transform var(--transition), box-shadow var(--transition);
+    border-left: 5px solid var(--op-color, #ccc);
+    position: relative;
+}
+
+.operator-card:not(.has-data) { opacity: 0.55; }
+
+.operator-card.has-data:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.1rem 1.25rem 0.4rem;
+}
+
+.color-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.card-title h3 { font-size: 0.88rem; font-weight: 700; line-height: 1.3; letter-spacing: 0.02em; }
+
+.color-name {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.card-body { text-align: center; padding: 0.5rem 1rem 0.75rem; }
+
+.formation-count {
+    font-size: 2.8rem;
+    font-weight: 800;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.formation-label {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 500;
+    margin-top: 0.15rem;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-around;
+    padding: 0.75rem 1rem;
+    border-top: 1px solid var(--border);
+    background: #fafbfc;
+}
+
+.stat { text-align: center; }
+.stat-value { display: block; font-weight: 700; font-size: 0.88rem; font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 0.68rem; color: var(--text-muted); font-weight: 500; }
+
+.progress-bar { height: 4px; background: var(--border); }
+
+.progress-fill {
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 0 2px 2px 0;
+}
+
+/* ============================================================
+   EVENT DETAILS
+   ============================================================ */
+
+.toggle-details {
+    display: block;
+    width: 100%;
+    padding: 0.55rem;
+    background: none;
+    border: none;
+    border-top: 1px solid var(--border);
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition);
+    font-family: inherit;
+}
+
+.toggle-details:hover { background: #f5f7fa; }
+
+.event-details {
+    display: none;
+    padding: 0.5rem 1rem 0.75rem;
+    background: #f8f9fb;
+    max-height: 220px;
+    overflow-y: auto;
+    border-top: 1px solid var(--border);
+}
+
+.event-row {
+    display: flex;
+    align-items: center;
+    padding: 0.45rem 0;
+    font-size: 0.78rem;
+    border-bottom: 1px solid #eee;
+    gap: 0.5rem;
+}
+
+.event-row:last-child { border-bottom: none; }
+
+.event-date {
+    color: var(--text-muted);
+    font-weight: 600;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    min-width: 90px;
+}
+
+.event-title {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-secondary);
+}
+
+.event-duration {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    font-weight: 500;
+    text-align: right;
+    min-width: 95px;
+}
+
+/* ============================================================
+   LOADING STATE
+   ============================================================ */
+
+#loading {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 5rem 2rem;
+    gap: 1rem;
+}
+
+#loading p { color: var(--text-muted); font-weight: 500; }
+
+.spinner {
+    width: 44px; height: 44px;
+    border: 4px solid var(--border);
+    border-top-color: #4285f4;
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ============================================================
+   EMPTY STATE
+   ============================================================ */
+
+.empty-state { text-align: center; padding: 4rem 2rem; color: var(--text-muted); }
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; opacity: 0.6; }
+.empty-state h3 { font-size: 1.2rem; color: var(--text-secondary); margin-bottom: 0.5rem; }
+.empty-state p { font-size: 0.9rem; }
+
+/* ============================================================
+   ERROR TOAST
+   ============================================================ */
+
+.error-toast {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #d32f2f;
+    color: white;
+    padding: 0.75rem 1.25rem;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.35);
+    z-index: 9999;
+    animation: toastIn 0.35s ease;
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    max-width: 90vw;
+}
+
+@keyframes toastIn {
+    from { transform: translateX(-50%) translateY(15px); opacity: 0; }
+    to   { transform: translateX(-50%) translateY(0); opacity: 1; }
+}
+
+/* ============================================================
+   ANIMATIONS
+   ============================================================ */
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+#app { animation: fadeIn 0.4s ease; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+
+@media (max-width: 768px) {
+    header { padding: 0.75rem 1rem; }
+    .header-left h1 { font-size: 0.95rem; }
+    .header-right { width: 100%; justify-content: flex-start; }
+    header select { flex: 1; max-width: none; }
+    .controls { padding: 1.25rem 0.75rem 0.5rem; gap: 0.75rem; }
+    .controls h2 { font-size: 1.15rem; min-width: auto; }
+    #summary-bar { margin: 0.75rem 1rem; }
+    .summary-item { padding: 0.75rem 0.75rem; }
+    .summary-value { font-size: 1.35rem; }
+    .summary-label { font-size: 0.6rem; letter-spacing: 0.8px; }
+    #operators-grid { grid-template-columns: 1fr; padding: 0 1rem 1.5rem; gap: 1rem; }
+    .formation-count { font-size: 2.2rem; }
+}
+
+@media (max-width: 480px) {
+    .login-card { padding: 2rem 1.5rem; }
+    #summary-bar { flex-direction: column; }
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+    }
+    .summary-item:last-child { border-bottom: none; }
+    .summary-label { margin-bottom: 0; }
+    .summary-value { font-size: 1.2rem; }
+    .nav-btn { width: 36px; height: 36px; }
+}
+
+/* ============================================================
+   SCROLLBAR
+   ============================================================ */
+
+.event-details::-webkit-scrollbar { width: 5px; }
+.event-details::-webkit-scrollbar-track { background: transparent; }
+.event-details::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+.event-details::-webkit-scrollbar-thumb:hover { background: #aaa; }
+
+/* ============================================================
+   PRINT STYLES
+   ============================================================ */
+
+@media print {
+    header, #login-screen, .toggle-details, .event-details, .nav-btn, .today-btn {
+        display: none !important;
+    }
+    body { background: white; }
+    #operators-grid { grid-template-columns: repeat(2, 1fr); }
+    .operator-card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+    .operator-card:not(.has-data) { opacity: 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================== -->
+<!-- LOGIN SCREEN                   -->
+<!-- ============================== -->
+<div id="login-screen">
+    <div class="login-card">
+        <span class="login-icon">📋</span>
+        <h1>Tracker Formazioni</h1>
+        <p>Accedi con il tuo account Google per visualizzare e conteggiare automaticamente le formazioni dal calendario.</p>
+        <button id="login-btn" onclick="login()">
+            <svg class="login-btn-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path fill="#fff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
+                <path fill="#fff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#fff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#fff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+            </svg>
+            Accedi con Google
+        </button>
+        <p class="login-note">🔒 Accesso in sola lettura — non verrà modificato nulla sul tuo calendario</p>
+    </div>
+</div>
+
+<!-- ============================== -->
+<!-- MAIN APPLICATION               -->
+<!-- ============================== -->
+<div id="app" style="display: none;">
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <h1>📋 Tracker Formazioni</h1>
+        </div>
+        <div class="header-right">
+            <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario">
+                <option>Caricamento...</option>
+            </select>
+            <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
+            <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
+            <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
+        </div>
+    </header>
+
+    <!-- Month Navigation -->
+    <div class="controls">
+        <button class="nav-btn" onclick="changeMonth(-1)" title="Mese precedente" aria-label="Mese precedente">◀</button>
+        <h2 id="month-display">–</h2>
+        <button class="nav-btn" onclick="changeMonth(1)" title="Mese successivo" aria-label="Mese successivo">▶</button>
+        <button class="today-btn" onclick="goToToday()">Oggi</button>
+    </div>
+
+    <!-- Summary Bar -->
+    <div id="summary-bar">
+        <div class="summary-item">
+            <span class="summary-label">Totale Formazioni</span>
+            <span class="summary-value" id="total-formations">–</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Ore Totali</span>
+            <span class="summary-value" id="total-hours">–</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-label">Eventi</span>
+            <span class="summary-value" id="total-events">–</span>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loading">
+        <div class="spinner"></div>
+        <p>Caricamento eventi dal calendario...</p>
+    </div>
+
+    <!-- Operators Grid -->
+    <div id="operators-grid"></div>
+
+</div>
+
+<!-- Google Identity Services -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<script>
+// ============================================================
+// CONFIGURAZIONE
+// ============================================================
+
+const CLIENT_ID = '976159946912-dkm3g8mo5apvl6d6gdiaqt2jf27fl9r2.apps.googleusercontent.com';
+
+// Mapping colorId Google Calendar → Operatori
+// Valori ufficiali verificati API v3:
+// 1=Lavanda, 2=Salvia, 3=Vinaccia, 4=Fenicottero, 5=Banana,
+// 6=Mandarino, 7=Pavone, 8=Grafite, 9=Mirtillo, 10=Basilico, 11=Pomodoro
+const OPERATORS = {
+    '11': { name: 'FABIO CATALDI',       colorName: 'Pomodoro',    hex: '#D50000' },
+    '4':  { name: 'GIOVANNI CAFARO',     colorName: 'Fenicottero', hex: '#E67C73' },
+    '6':  { name: 'VITO PALLADINO',      colorName: 'Mandarino',   hex: '#F4511E' },
+    '5':  { name: 'ANTONIO EQUESTRE',    colorName: 'Banana',      hex: '#F6BF26' },
+    '2':  { name: 'CARMINE CALOCERO',    colorName: 'Salvia',      hex: '#33B679' },
+    '9':  { name: 'WILLIAM POTENZA',     colorName: 'Mirtillo',    hex: '#3F51B5' },
+    '7':  { name: 'Da Associare',        colorName: 'Pavone',      hex: '#039BE5' },
+    '1':  { name: 'ANGELA LIONE',        colorName: 'Lavanda',     hex: '#7986CB' },
+    '3':  { name: 'ROSY PIA CAVUOTI',    colorName: 'Vinaccia',    hex: '#8E24AA' },
+    '8':  { name: 'GIANMARCO PALAZZO',   colorName: 'Grafite',     hex: '#616161' },
+};
+
+const MESI = [
+    'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
+    'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
+];
+
+// ============================================================
+// STATO APPLICAZIONE
+// ============================================================
+
+let tokenClient;
+let accessToken = null;
+let currentYear  = new Date().getFullYear();
+let currentMonth = new Date().getMonth();
+let currentData  = null;
+let calendars    = [];
+let selectedCalendarId = 'primary';
+
+// Chiave localStorage per ricordare se l'utente ha già fatto login
+const LS_LOGGED_IN = 'gcal_tracker_logged_in';
+
+// ============================================================
+// INIZIALIZZAZIONE & AUTENTICAZIONE
+// ============================================================
+
+function initApp() {
+    if (typeof google === 'undefined' || !google.accounts) {
+        setTimeout(initApp, 100);
+        return;
+    }
+
+    tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: CLIENT_ID,
+        scope: 'https://www.googleapis.com/auth/calendar.readonly',
+        callback: handleTokenResponse,
+        // prompt vuoto = nessuna schermata di consenso se già autorizzato
+        prompt: '',
+    });
+
+    updateMonthDisplay();
+
+    // Se l'utente aveva già fatto login in precedenza, prova il rinnovo silenzioso
+    if (localStorage.getItem(LS_LOGGED_IN) === 'true') {
+        silentLogin();
+    }
+}
+
+/**
+ * Tentativo di login silenzioso (senza popup, sfrutta la sessione Google attiva).
+ * Se fallisce (nessuna sessione Google attiva), mostra la schermata di login.
+ */
+function silentLogin() {
+    if (!tokenClient) { return; }
+    // prompt:'' = login silenzioso; se non riesce Google mostrerà una schermata minima
+    tokenClient.requestAccessToken({ prompt: '' });
+}
+
+function handleTokenResponse(response) {
+    if (response.error) {
+        // Se il login silenzioso fallisce mostriamo la schermata manuale
+        if (response.error === 'interaction_required' ||
+            response.error === 'access_denied') {
+            localStorage.removeItem(LS_LOGGED_IN);
+            showLoginScreen();
+        } else {
+            showError('Errore di autenticazione: ' + (response.error_description || response.error));
+        }
+        return;
+    }
+    accessToken = response.access_token;
+    localStorage.setItem(LS_LOGGED_IN, 'true');
+    onLoginSuccess();
+}
+
+function login() {
+    if (!tokenClient) {
+        showError('Libreria Google non ancora caricata. Riprova tra qualche secondo.');
+        return;
+    }
+    // Prima volta (o dopo logout esplicito): mostra selezione account
+    tokenClient.requestAccessToken({ prompt: 'select_account' });
+}
+
+function logout() {
+    if (accessToken) {
+        google.accounts.oauth2.revoke(accessToken);
+        accessToken = null;
+    }
+    localStorage.removeItem(LS_LOGGED_IN);
+    showLoginScreen();
+}
+
+function showLoginScreen() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+}
+
+async function onLoginSuccess() {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    try {
+        await loadCalendars();
+        await loadEvents();
+    } catch (e) {
+        console.error('Errore inizializzazione:', e);
+    }
+}
+
+// ============================================================
+// RINNOVO AUTOMATICO TOKEN (ogni 45 minuti, scade dopo 1h)
+// ============================================================
+
+setInterval(function() {
+    if (accessToken && tokenClient) {
+        tokenClient.requestAccessToken({ prompt: '' });
+    }
+}, 45 * 60 * 1000);
+
+// ============================================================
+// CHIAMATE API GOOGLE CALENDAR
+// ============================================================
+
+async function apiCall(url) {
+    const response = await fetch(url, {
+        headers: { 'Authorization': 'Bearer ' + accessToken }
+    });
+
+    if (response.status === 401) {
+        // Token scaduto: tenta rinnovo silenzioso automatico
+        accessToken = null;
+        silentLogin();
+        throw new Error('Token expired');
+    }
+
+    if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || 'Errore API: ' + response.status);
+    }
+
+    return response.json();
+}
+
+async function loadCalendars() {
+    try {
+        const data = await apiCall(
+            'https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=reader'
+        );
+        calendars = (data.items || []).sort((a, b) => {
+            if (a.primary) return -1;
+            if (b.primary) return 1;
+            return (a.summary || '').localeCompare(b.summary || '');
+        });
+        renderCalendarSelector();
+    } catch (e) {
+        if (e.message !== 'Token expired') console.error('Errore caricamento calendari:', e);
+    }
+}
+
+async function fetchAllEvents(year, month) {
+    const timeMin = new Date(year, month, 1).toISOString();
+    const timeMax = new Date(year, month + 1, 1).toISOString();
+
+    let allEvents = [];
+    let pageToken = '';
+
+    do {
+        let url = 'https://www.googleapis.com/calendar/v3/calendars/'
+            + encodeURIComponent(selectedCalendarId)
+            + '/events?'
+            + 'timeMin=' + encodeURIComponent(timeMin)
+            + '&timeMax=' + encodeURIComponent(timeMax)
+            + '&singleEvents=true'
+            + '&maxResults=2500'
+            + '&orderBy=startTime';
+
+        if (pageToken) url += '&pageToken=' + encodeURIComponent(pageToken);
+
+        const data = await apiCall(url);
+        allEvents = allEvents.concat(data.items || []);
+        pageToken = data.nextPageToken || '';
+    } while (pageToken);
+
+    return allEvents;
+}
+
+async function loadEvents() {
+    showLoading(true);
+    try {
+        const events = await fetchAllEvents(currentYear, currentMonth);
+        currentData = calculateFormations(events);
+        renderDashboard(currentData);
+    } catch (e) {
+        if (e.message !== 'Token expired') {
+            showError('Errore nel caricamento: ' + e.message);
+        }
+    } finally {
+        showLoading(false);
+    }
+}
+
+// ============================================================
+// CALCOLO FORMAZIONI
+// ============================================================
+
+function calculateFormations(events) {
+    const counts = {};
+
+    Object.entries(OPERATORS).forEach(([colorId, op]) => {
+        counts[colorId] = {
+            ...op,
+            colorId,
+            formations: 0,
+            totalMinutes: 0,
+            eventCount: 0,
+            events: []
+        };
+    });
+
+    let totalFormations = 0, totalMinutes = 0, totalEvents = 0;
+
+    events.forEach(event => {
+        const colorId = event.colorId;
+        if (!colorId || !OPERATORS[colorId]) return;
+        if (event.status === 'cancelled') return;
+        if (!event.start.dateTime || !event.end.dateTime) return;
+
+        const startTime = new Date(event.start.dateTime);
+        const endTime   = new Date(event.end.dateTime);
+        const durationMinutes = (endTime - startTime) / (1000 * 60);
+        if (durationMinutes <= 0) return;
+
+        const formations = Math.floor(durationMinutes / 30);
+
+        counts[colorId].formations    += formations;
+        counts[colorId].totalMinutes  += durationMinutes;
+        counts[colorId].eventCount++;
+        counts[colorId].events.push({
+            title: event.summary || '(Senza titolo)',
+            start: startTime,
+            end: endTime,
+            duration: durationMinutes,
+            formations
+        });
+
+        totalFormations += formations;
+        totalMinutes    += durationMinutes;
+        totalEvents++;
+    });
+
+    return { operators: counts, totalFormations, totalMinutes, totalEvents };
+}
+
+// ============================================================
+// RENDERING UI
+// ============================================================
+
+function updateMonthDisplay() {
+    document.getElementById('month-display').textContent =
+        MESI[currentMonth] + ' ' + currentYear;
+}
+
+function renderCalendarSelector() {
+    const select = document.getElementById('calendar-select');
+    if (!select) return;
+    select.innerHTML = '';
+    calendars.forEach(cal => {
+        const option = document.createElement('option');
+        option.value = cal.id;
+        option.textContent = cal.summary || cal.id;
+        if (cal.primary && selectedCalendarId === 'primary') {
+            option.selected = true;
+            selectedCalendarId = cal.id;
+        } else if (cal.id === selectedCalendarId) {
+            option.selected = true;
+        }
+        select.appendChild(option);
+    });
+}
+
+function renderDashboard(data) {
+    document.getElementById('total-formations').textContent = data.totalFormations;
+    document.getElementById('total-hours').textContent      = formatHours(data.totalMinutes);
+    document.getElementById('total-events').textContent     = data.totalEvents;
+
+    const grid = document.getElementById('operators-grid');
+    grid.innerHTML = '';
+
+    const sortedOps = Object.values(data.operators).sort((a, b) => {
+        if (b.formations !== a.formations) return b.formations - a.formations;
+        return a.name.localeCompare(b.name);
+    });
+
+    if (data.totalEvents === 0) {
+        grid.innerHTML = '<div class="empty-state">'
+            + '<div class="empty-icon">📅</div>'
+            + '<h3>Nessuna formazione trovata</h3>'
+            + '<p>Non ci sono eventi con colore assegnato per ' + MESI[currentMonth] + ' ' + currentYear + '</p>'
+            + '</div>';
+        grid.style.display = 'block';
+        return;
+    }
+
+    grid.style.display = 'grid';
+    sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, data.totalFormations)));
+}
+
+function createOperatorCard(op, total) {
+    const percentage = total > 0 ? ((op.formations / total) * 100).toFixed(1) : '0.0';
+
+    const card = document.createElement('div');
+    card.className = 'operator-card' + (op.formations > 0 ? ' has-data' : '');
+    card.style.setProperty('--op-color', op.hex);
+
+    let detailsHTML = '';
+    if (op.events.length > 0) {
+        const rows = op.events.map(e =>
+            '<div class="event-row">'
+            + '<span class="event-date">' + formatDate(e.start) + '</span>'
+            + '<span class="event-title">' + escapeHtml(e.title) + '</span>'
+            + '<span class="event-duration">' + formatDuration(e.duration) + ' → <strong>' + e.formations + '</strong></span>'
+            + '</div>'
+        ).join('');
+
+        detailsHTML =
+            '<button class="toggle-details" onclick="toggleDetails(this)">Mostra dettagli ▼</button>'
+            + '<div class="event-details">' + rows + '</div>';
+    }
+
+    card.innerHTML =
+        '<div class="card-header">'
+        + '<span class="color-dot" style="background:' + op.hex + '"></span>'
+        + '<div class="card-title">'
+        + '<h3>' + escapeHtml(op.name) + '</h3>'
+        + '<span class="color-name">' + op.colorName + '</span>'
+        + '</div></div>'
+        + '<div class="card-body">'
+        + '<div class="formation-count" style="color:' + op.hex + '">' + op.formations + '</div>'
+        + '<div class="formation-label">formazioni</div>'
+        + '</div>'
+        + '<div class="card-footer">'
+        + '<div class="stat"><span class="stat-value">' + formatHours(op.totalMinutes) + '</span><span class="stat-label">ore</span></div>'
+        + '<div class="stat"><span class="stat-value">' + op.eventCount + '</span><span class="stat-label">eventi</span></div>'
+        + '<div class="stat"><span class="stat-value">' + percentage + '%</span><span class="stat-label">del totale</span></div>'
+        + '</div>'
+        + '<div class="progress-bar"><div class="progress-fill" style="width:' + percentage + '%;background:' + op.hex + '"></div></div>'
+        + detailsHTML;
+
+    return card;
+}
+
+// ============================================================
+// NAVIGAZIONE & INTERAZIONI
+// ============================================================
+
+function changeMonth(delta) {
+    currentMonth += delta;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+    updateMonthDisplay();
+    if (accessToken) loadEvents();
+}
+
+function goToToday() {
+    const now = new Date();
+    currentYear  = now.getFullYear();
+    currentMonth = now.getMonth();
+    updateMonthDisplay();
+    if (accessToken) loadEvents();
+}
+
+function changeCalendar(calId) {
+    selectedCalendarId = calId;
+    if (accessToken) loadEvents();
+}
+
+function toggleDetails(btn) {
+    const details = btn.nextElementSibling;
+    const isHidden = details.style.display === 'none' || !details.style.display;
+    details.style.display = isHidden ? 'block' : 'none';
+    btn.textContent = isHidden ? 'Nascondi dettagli ▲' : 'Mostra dettagli ▼';
+}
+
+function refreshData() {
+    if (accessToken) loadEvents();
+}
+
+// ============================================================
+// ESPORTAZIONE CSV
+// ============================================================
+
+function exportCSV() {
+    if (!currentData) { showError('Nessun dato da esportare.'); return; }
+
+    let csv = '\uFEFF'; // BOM UTF-8
+    csv += 'Operatore;Colore;Formazioni;Ore Totali;N. Eventi;% sul Totale\n';
+
+    Object.values(currentData.operators)
+        .sort((a, b) => b.formations - a.formations)
+        .forEach(op => {
+            const pct = currentData.totalFormations > 0
+                ? ((op.formations / currentData.totalFormations) * 100).toFixed(1)
+                : '0.0';
+            csv += escapeCSV(op.name) + ';'
+                + escapeCSV(op.colorName) + ';'
+                + op.formations + ';'
+                + formatHours(op.totalMinutes) + ';'
+                + op.eventCount + ';'
+                + pct + '%\n';
+        });
+
+    csv += '\nTOTALE;;'
+        + currentData.totalFormations + ';'
+        + formatHours(currentData.totalMinutes) + ';'
+        + currentData.totalEvents + ';100%\n';
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href     = url;
+    link.download = 'formazioni_' + MESI[currentMonth] + '_' + currentYear + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// ============================================================
+// UTILITÀ
+// ============================================================
+
+function formatHours(minutes) {
+    if (minutes === 0) return '0h';
+    const h = Math.floor(minutes / 60);
+    const m = Math.round(minutes % 60);
+    if (m === 0) return h + 'h';
+    if (h === 0) return m + 'm';
+    return h + 'h ' + m + 'm';
+}
+
+function formatDuration(minutes) {
+    if (minutes < 60) return minutes + ' min';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (m === 0) return h + 'h';
+    return h + 'h ' + m + 'm';
+}
+
+function formatDate(date) {
+    return date.toLocaleDateString('it-IT', {
+        day: '2-digit', month: '2-digit',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function escapeCSV(text) {
+    if (text.includes(';') || text.includes('"') || text.includes('\n')) {
+        return '"' + text.replace(/"/g, '""') + '"';
+    }
+    return text;
+}
+
+function showLoading(show) {
+    document.getElementById('loading').style.display = show ? 'flex' : 'none';
+    if (show) {
+        document.getElementById('operators-grid').style.display = 'none';
+        document.getElementById('summary-bar').style.opacity = '0.5';
+    } else {
+        document.getElementById('summary-bar').style.opacity = '1';
+    }
+}
+
+function showError(message) {
+    document.querySelectorAll('.error-toast').forEach(t => t.remove());
+    const toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.innerHTML = '<span>' + escapeHtml(message) + '</span>'
+        + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;margin-left:1rem;">✕</button>';
+    document.body.appendChild(toast);
+    setTimeout(() => { if (toast.parentElement) toast.remove(); }, 6000);
+}
+
+// Navigazione da tastiera
+document.addEventListener('keydown', function(e) {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft')  changeMonth(-1);
+    if (e.key === 'ArrowRight') changeMonth(1);
+});
+
+// Avvia app quando GIS è pronto
+window.addEventListener('load', function() {
+    initApp();
+});
+</script>
+
+</body>
+</html>
