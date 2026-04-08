@@ -14,7 +14,7 @@ const CONFIG = {
   // 1=Lavanda, 2=Salvia, 3=Vinaccia/Uva, 4=Fenicottero, 5=Banana,
   // 6=Mandarino, 7=Pavone, 8=Mirtillo, 9=Basilico, 10=Pomodoro, 11=Grafite
   OPERATORI: {
-    '10': { nome: 'FABIO CATALDI',      colore: 'Pomodoro',    hex: '#F83A22' },
+    '10': { nome: 'FABIO CATALDI',      colore: 'Pomodoro',    hex: '#D50000' },
     '4':  { nome: 'GIOVANNI CAFARO',    colore: 'Fenicottero', hex: '#F4511E' },
     '6':  { nome: 'VITO PALLADINO',     colore: 'Mandarino',   hex: '#F6BF26' },
     '5':  { nome: 'ANTONIO EQUESTRE',   colore: 'Banana',      hex: '#F6BF26' },
