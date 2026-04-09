@@ -795,6 +795,7 @@ header select option { background: #1a1a2e; color: white; }
             <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario">
                 <option>Caricamento...</option>
             </select>
+            <button id="da-associare-btn" onclick="openDaAssociareModal()" title="Mostra formazioni da associare" style="background:rgba(3,155,229,0.25);border-color:rgba(3,155,229,0.6);display:none;">🦚 Da Associare: <span id="da-associare-count">0</span></button>
             <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
             <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
             <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
@@ -1269,12 +1270,38 @@ function renderDashboard(data, grandTotal) {
     const grid = document.getElementById('operators-grid');
     grid.innerHTML = '';
 
-    const sortedOps = Object.values(data.operators).sort((a, b) => {
+    // Aggiorna il pulsante "Da Associare" (Pavone, colorId '7')
+    const pavoneOp = data.operators['7'];
+    const daAssociareCount = pavoneOp ? pavoneOp.formations : 0;
+    const daAssociareBtn = document.getElementById('da-associare-btn');
+    if (daAssociareBtn) {
+        document.getElementById('da-associare-count').textContent = daAssociareCount;
+        daAssociareBtn.style.display = '';
+    }
+
+    // Escludi Pavone ('7') dalla griglia delle card
+    const sortedOps = Object.values(data.operators).filter(op => op.colorId !== '7').sort((a, b) => {
         if (b.formations !== a.formations) return b.formations - a.formations;
         return a.name.localeCompare(b.name);
     });
 
-    if (data.totalEvents === 0) {
+    // Calcola totalEvents escludendo Pavone per il messaggio "nessuna formazione"
+    const gridEvents = data.totalEvents - (pavoneOp ? pavoneOp.eventCount : 0);
+
+    if (gridEvents === 0 && daAssociareCount > 0) {
+        const label = selectedWeek === 0
+            ? MESI[currentMonth] + ' ' + currentYear
+            : weeksInMonth[selectedWeek - 1].label;
+        grid.innerHTML = '<div class="empty-state">'
+            + '<div class="empty-icon">🦚</div>'
+            + '<h3>Solo formazioni da associare</h3>'
+            + '<p>Ci sono <strong>' + daAssociareCount + '</strong> formazioni da associare per ' + label + ' — usa il pulsante in alto</p>'
+            + '</div>';
+        grid.style.display = 'block';
+        return;
+    }
+
+    if (gridEvents === 0) {
         const label = selectedWeek === 0
             ? MESI[currentMonth] + ' ' + currentYear
             : weeksInMonth[selectedWeek - 1].label;
@@ -1327,6 +1354,10 @@ function createOperatorCard(op, total) {
 // ============================================================
 // MODAL POPUP DETTAGLI
 // ============================================================
+
+function openDaAssociareModal() {
+    openDetailsModal('7');
+}
 
 function openDetailsModal(colorId) {
     const op = filteredData ? filteredData.operators[colorId] : null;
