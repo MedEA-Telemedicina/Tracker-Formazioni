@@ -1340,7 +1340,7 @@ function renderDashboard(data, grandTotal) {
 
     // Aggiorna il contatore "Da Associare" nella summary bar (Pavone, colorId '7')
     const pavoneOp = data.operators['7'];
-    const daAssociareCount = pavoneOp ? pavoneOp.formations : 0;
+    const daAssociareCount = pavoneOp ? pavoneOp.eventCount : 0;
     document.getElementById('da-associare-count').textContent = daAssociareCount;
 
     const grid = document.getElementById('operators-grid');
