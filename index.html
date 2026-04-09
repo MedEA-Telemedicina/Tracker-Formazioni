@@ -309,6 +309,34 @@ header select option { background: #1a1a2e; color: white; }
     line-height: 1.2;
 }
 
+/* Da Associare summary item - clickable */
+.summary-item.da-associare-item {
+    cursor: pointer;
+    transition: background var(--transition);
+    position: relative;
+}
+
+.summary-item.da-associare-item:hover {
+    background: #f0f8ff;
+}
+
+.summary-item.da-associare-item:hover .summary-label {
+    color: #039BE5;
+}
+
+.summary-item.da-associare-item::after {
+    content: '🔍';
+    display: block;
+    font-size: 0.65rem;
+    margin-top: 0.2rem;
+    opacity: 0;
+    transition: opacity var(--transition);
+}
+
+.summary-item.da-associare-item:hover::after {
+    opacity: 1;
+}
+
 /* ============================================================
    OPERATORS GRID
    ============================================================ */
@@ -795,7 +823,6 @@ header select option { background: #1a1a2e; color: white; }
             <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario">
                 <option>Caricamento...</option>
             </select>
-            <button id="da-associare-btn" onclick="openDaAssociareModal()" title="Mostra formazioni da associare" style="background:rgba(3,155,229,0.25);border-color:rgba(3,155,229,0.6);display:none;">🦚 Da Associare: <span id="da-associare-count">0</span></button>
             <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
             <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
             <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
@@ -826,6 +853,10 @@ header select option { background: #1a1a2e; color: white; }
         <div class="summary-item">
             <span class="summary-label">Eventi</span>
             <span class="summary-value" id="total-events">–</span>
+        </div>
+        <div class="summary-item da-associare-item" id="da-associare-summary" onclick="openDaAssociareModal()" title="Mostra formazioni da associare">
+            <span class="summary-label">Da Associare</span>
+            <span class="summary-value" id="da-associare-count" style="color:#039BE5">–</span>
         </div>
     </div>
 
@@ -894,6 +925,9 @@ const OPERATORS = {
     '8':  { name: 'GIANMARCO PALAZZO',   colorName: 'Grafite',     hex: '#616161' },
 };
 
+// Varianti hex aggiuntive per il colore Pavone (Google Calendar può restituire varianti leggermente diverse)
+const PAVONE_HEX_VARIANTS = ['#039be5', '#039BE5', '#4986E7', '#4986e7', '#00AEFF', '#00aeff'];
+
 const MESI = [
     'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
     'Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'
@@ -914,6 +948,7 @@ let calendars    = [];
 let selectedCalendarId = 'primary';
 let selectedWeek = 0;         // 0 = mese intero, 1..N = settimana
 let weeksInMonth = [];        // array di { label, start, end }
+let selectedCalendarBgColor = null; // backgroundColor del calendario selezionato
 
 const LS_LOGGED_IN = 'gcal_tracker_logged_in';
 
@@ -1187,6 +1222,35 @@ function applyPeriodFilter() {
 // CALCOLO FORMAZIONI
 // ============================================================
 
+/**
+ * Risolve il colorId di un evento.
+ * - Se l'evento ha un colorId esplicito, lo usa.
+ * - Altrimenti, se il calendario selezionato ha un backgroundColor
+ *   che corrisponde a uno degli operatori, usa quel colorId.
+ *   Questo permette di catturare gli eventi "Pavone" anche quando
+ *   il colore è ereditato dal calendario e non impostato sull'evento.
+ */
+function resolveColorId(event) {
+    // colorId esplicito sull'evento (stringa "7", oppure number 7)
+    if (event.colorId !== undefined && event.colorId !== null) {
+        return String(event.colorId);
+    }
+
+    // Nessun colorId esplicito: prova a ricavarlo dal colore del calendario
+    if (selectedCalendarBgColor) {
+        const bg = selectedCalendarBgColor.toLowerCase();
+        for (const [colorId, op] of Object.entries(OPERATORS)) {
+            if (op.hex.toLowerCase() === bg) return colorId;
+        }
+        // Controlla anche le varianti note del colore Pavone
+        if (PAVONE_HEX_VARIANTS.map(v => v.toLowerCase()).includes(bg)) {
+            return '7';
+        }
+    }
+
+    return null;
+}
+
 function calculateFormations(events) {
     const counts = {};
 
@@ -1204,7 +1268,7 @@ function calculateFormations(events) {
     let totalFormations = 0, totalMinutes = 0, totalEvents = 0;
 
     events.forEach(event => {
-        const colorId = event.colorId;
+        const colorId = resolveColorId(event);
         if (!colorId || !OPERATORS[colorId]) return;
         if (event.status === 'cancelled') return;
         if (!event.start.dateTime || !event.end.dateTime) return;
@@ -1260,6 +1324,13 @@ function renderCalendarSelector() {
         }
         select.appendChild(option);
     });
+    // Aggiorna il backgroundColor del calendario corrente
+    updateSelectedCalendarColor();
+}
+
+function updateSelectedCalendarColor() {
+    const cal = calendars.find(c => c.id === selectedCalendarId);
+    selectedCalendarBgColor = cal ? (cal.backgroundColor || null) : null;
 }
 
 function renderDashboard(data, grandTotal) {
@@ -1267,17 +1338,13 @@ function renderDashboard(data, grandTotal) {
     document.getElementById('total-hours').textContent      = formatHours(data.totalMinutes);
     document.getElementById('total-events').textContent     = data.totalEvents;
 
-    const grid = document.getElementById('operators-grid');
-    grid.innerHTML = '';
-
-    // Aggiorna il pulsante "Da Associare" (Pavone, colorId '7')
+    // Aggiorna il contatore "Da Associare" nella summary bar (Pavone, colorId '7')
     const pavoneOp = data.operators['7'];
     const daAssociareCount = pavoneOp ? pavoneOp.formations : 0;
-    const daAssociareBtn = document.getElementById('da-associare-btn');
-    if (daAssociareBtn) {
-        document.getElementById('da-associare-count').textContent = daAssociareCount;
-        daAssociareBtn.style.display = '';
-    }
+    document.getElementById('da-associare-count').textContent = daAssociareCount;
+
+    const grid = document.getElementById('operators-grid');
+    grid.innerHTML = '';
 
     // Escludi Pavone ('7') dalla griglia delle card
     const sortedOps = Object.values(data.operators).filter(op => op.colorId !== '7').sort((a, b) => {
@@ -1295,7 +1362,7 @@ function renderDashboard(data, grandTotal) {
         grid.innerHTML = '<div class="empty-state">'
             + '<div class="empty-icon">🦚</div>'
             + '<h3>Solo formazioni da associare</h3>'
-            + '<p>Ci sono <strong>' + daAssociareCount + '</strong> formazioni da associare per ' + label + ' — usa il pulsante in alto</p>'
+            + '<p>Ci sono <strong>' + daAssociareCount + '</strong> formazioni da associare per ' + label + ' — clicca su <em>Da Associare</em> in alto</p>'
             + '</div>';
         grid.style.display = 'block';
         return;
@@ -1453,6 +1520,7 @@ function goToToday() {
 
 function changeCalendar(calId) {
     selectedCalendarId = calId;
+    updateSelectedCalendarColor();
     if (accessToken) loadEvents();
 }
 
