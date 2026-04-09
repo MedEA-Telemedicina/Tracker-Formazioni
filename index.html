@@ -589,9 +589,8 @@ header select option { background: #1a1a2e; color: white; }
 .modal-event-title {
     font-weight: 600;
     color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: normal;
+    word-break: break-word;
     margin-bottom: 0.2rem;
 }
 
@@ -1075,9 +1074,23 @@ async function loadEvents() {
     showLoading(true);
     try {
         allMonthEvents = await fetchAllEvents(currentYear, currentMonth);
-        // Reset to full month view
-        selectedWeek = 0;
         weeksInMonth = getWeeksInMonth(currentYear, currentMonth);
+
+        // Seleziona automaticamente la settimana corrente se il mese visualizzato è quello attuale
+        const today = new Date();
+        if (today.getFullYear() === currentYear && today.getMonth() === currentMonth) {
+            const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+            let foundWeek = 0;
+            weeksInMonth.forEach((w, i) => {
+                if (todayMidnight >= w.start && todayMidnight <= w.end) {
+                    foundWeek = i + 1;
+                }
+            });
+            selectedWeek = foundWeek;
+        } else {
+            selectedWeek = 0;
+        }
+
         renderWeekTabs();
         applyPeriodFilter();
     } catch (e) {
