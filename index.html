@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -228,6 +229,44 @@ header select option { background: #1a1a2e; color: white; }
 .today-btn:hover { background: var(--text-primary); color: white; border-color: var(--text-primary); }
 
 /* ============================================================
+   WEEK TABS
+   ============================================================ */
+
+#week-tabs {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0 1.5rem 1rem;
+    flex-wrap: wrap;
+}
+
+.week-tab {
+    padding: 0.35rem 0.9rem;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 20px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.week-tab:hover {
+    border-color: #4285f4;
+    color: #4285f4;
+}
+
+.week-tab.active {
+    background: var(--text-primary);
+    color: white;
+    border-color: var(--text-primary);
+}
+
+/* ============================================================
    SUMMARY BAR
    ============================================================ */
 
@@ -236,7 +275,7 @@ header select option { background: #1a1a2e; color: white; }
     justify-content: center;
     gap: 0;
     padding: 0;
-    margin: 0.75rem 1.5rem 1.25rem;
+    margin: 0 1.5rem 1.25rem;
     background: white;
     border-radius: var(--radius);
     box-shadow: var(--shadow);
@@ -296,6 +335,10 @@ header select option { background: #1a1a2e; color: white; }
 }
 
 .operator-card:not(.has-data) { opacity: 0.55; }
+
+.operator-card.has-data {
+    cursor: pointer;
+}
 
 .operator-card.has-data:hover {
     transform: translateY(-3px);
@@ -364,69 +407,228 @@ header select option { background: #1a1a2e; color: white; }
     border-radius: 0 2px 2px 0;
 }
 
+/* Card hint for clickable */
+.card-hint {
+    display: block;
+    text-align: center;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    padding: 0.4rem 0.5rem;
+    border-top: 1px solid var(--border);
+    letter-spacing: 0.5px;
+    background: #fafbfc;
+    transition: background var(--transition), color var(--transition);
+}
+
+.operator-card.has-data:hover .card-hint {
+    background: #f0f2f5;
+    color: var(--text-secondary);
+}
+
 /* ============================================================
-   EVENT DETAILS
+   MODAL POPUP
    ============================================================ */
 
-.toggle-details {
-    display: block;
-    width: 100%;
-    padding: 0.55rem;
-    background: none;
-    border: none;
-    border-top: 1px solid var(--border);
-    color: var(--text-secondary);
-    font-size: 0.78rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: background var(--transition);
-    font-family: inherit;
-}
-
-.toggle-details:hover { background: #f5f7fa; }
-
-.event-details {
+#modal-overlay {
     display: none;
-    padding: 0.5rem 1rem 0.75rem;
-    background: #f8f9fb;
-    max-height: 220px;
-    overflow-y: auto;
-    border-top: 1px solid var(--border);
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    animation: fadeIn 0.2s ease;
 }
 
-.event-row {
+#modal-overlay.open {
+    display: flex;
+}
+
+.modal-box {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    max-width: 620px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+@keyframes modalIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.97); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.modal-header {
     display: flex;
     align-items: center;
-    padding: 0.45rem 0;
-    font-size: 0.78rem;
-    border-bottom: 1px solid #eee;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
 }
 
-.event-row:last-child { border-bottom: none; }
-
-.event-date {
-    color: var(--text-muted);
-    font-weight: 600;
-    white-space: nowrap;
-    font-variant-numeric: tabular-nums;
-    min-width: 90px;
+.modal-color-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
-.event-title {
+.modal-title {
     flex: 1;
+}
+
+.modal-title h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.modal-title span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.modal-period-badge {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 12px;
+    background: var(--bg);
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.modal-close {
+    width: 32px; height: 32px;
+    border: none;
+    background: var(--bg);
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background var(--transition);
+    flex-shrink: 0;
+    color: var(--text-secondary);
+}
+
+.modal-close:hover { background: var(--border); }
+
+.modal-stats {
+    display: flex;
+    justify-content: space-around;
+    padding: 1rem 1.5rem;
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+
+.modal-stat { text-align: center; }
+.modal-stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    line-height: 1.1;
+    font-variant-numeric: tabular-nums;
+}
+.modal-stat-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 500;
+}
+
+.modal-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.75rem 1.5rem 1.25rem;
+}
+
+.modal-body::-webkit-scrollbar { width: 5px; }
+.modal-body::-webkit-scrollbar-track { background: transparent; }
+.modal-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+.modal-event-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.65rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 0.82rem;
+}
+
+.modal-event-row:last-child { border-bottom: none; }
+
+.modal-event-num {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+}
+
+.modal-event-info { flex: 1; min-width: 0; }
+
+.modal-event-title {
+    font-weight: 600;
+    color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: var(--text-secondary);
+    margin-bottom: 0.2rem;
 }
 
-.event-duration {
-    color: var(--text-secondary);
-    white-space: nowrap;
-    font-weight: 500;
+.modal-event-date {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.modal-event-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.2rem;
+    flex-shrink: 0;
     text-align: right;
-    min-width: 95px;
+}
+
+.modal-event-duration {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.modal-event-formations {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.15rem 0.5rem;
+    border-radius: 10px;
+    color: white;
+}
+
+.modal-empty {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--text-muted);
+    font-size: 0.9rem;
 }
 
 /* ============================================================
@@ -512,12 +714,17 @@ header select option { background: #1a1a2e; color: white; }
     header select { flex: 1; max-width: none; }
     .controls { padding: 1.25rem 0.75rem 0.5rem; gap: 0.75rem; }
     .controls h2 { font-size: 1.15rem; min-width: auto; }
-    #summary-bar { margin: 0.75rem 1rem; }
+    #summary-bar { margin: 0 1rem 1rem; }
+    #week-tabs { padding: 0 1rem 0.75rem; gap: 0.4rem; }
+    .week-tab { font-size: 0.72rem; padding: 0.3rem 0.7rem; }
     .summary-item { padding: 0.75rem 0.75rem; }
     .summary-value { font-size: 1.35rem; }
     .summary-label { font-size: 0.6rem; letter-spacing: 0.8px; }
     #operators-grid { grid-template-columns: 1fr; padding: 0 1rem 1.5rem; gap: 1rem; }
     .formation-count { font-size: 2.2rem; }
+    .modal-box { max-height: 92vh; }
+    .modal-stats { padding: 0.75rem 1rem; }
+    .modal-body { padding: 0.5rem 1rem 1rem; }
 }
 
 @media (max-width: 480px) {
@@ -538,20 +745,11 @@ header select option { background: #1a1a2e; color: white; }
 }
 
 /* ============================================================
-   SCROLLBAR
-   ============================================================ */
-
-.event-details::-webkit-scrollbar { width: 5px; }
-.event-details::-webkit-scrollbar-track { background: transparent; }
-.event-details::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-.event-details::-webkit-scrollbar-thumb:hover { background: #aaa; }
-
-/* ============================================================
    PRINT STYLES
    ============================================================ */
 
 @media print {
-    header, #login-screen, .toggle-details, .event-details, .nav-btn, .today-btn {
+    header, #login-screen, .card-hint, #week-tabs, #modal-overlay, .nav-btn, .today-btn {
         display: none !important;
     }
     body { background: white; }
@@ -612,6 +810,9 @@ header select option { background: #1a1a2e; color: white; }
         <button class="today-btn" onclick="goToToday()">Oggi</button>
     </div>
 
+    <!-- Week Tabs -->
+    <div id="week-tabs"></div>
+
     <!-- Summary Bar -->
     <div id="summary-bar">
         <div class="summary-item">
@@ -639,6 +840,36 @@ header select option { background: #1a1a2e; color: white; }
 
 </div>
 
+<!-- Modal Popup -->
+<div id="modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="modal-color-dot" id="modal-dot"></span>
+            <div class="modal-title">
+                <h3 id="modal-op-name">–</h3>
+                <span id="modal-op-color">–</span>
+            </div>
+            <span class="modal-period-badge" id="modal-period-badge">–</span>
+            <button class="modal-close" onclick="closeModal()" title="Chiudi">✕</button>
+        </div>
+        <div class="modal-stats">
+            <div class="modal-stat">
+                <span class="modal-stat-value" id="modal-formations" style="color:#4285f4">–</span>
+                <span class="modal-stat-label">Formazioni</span>
+            </div>
+            <div class="modal-stat">
+                <span class="modal-stat-value" id="modal-hours">–</span>
+                <span class="modal-stat-label">Ore Totali</span>
+            </div>
+            <div class="modal-stat">
+                <span class="modal-stat-value" id="modal-events">–</span>
+                <span class="modal-stat-label">Eventi</span>
+            </div>
+        </div>
+        <div class="modal-body" id="modal-events-list"></div>
+    </div>
+</div>
+
 <!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
@@ -650,9 +881,6 @@ header select option { background: #1a1a2e; color: white; }
 const CLIENT_ID = '976159946912-dkm3g8mo5apvl6d6gdiaqt2jf27fl9r2.apps.googleusercontent.com';
 
 // Mapping colorId Google Calendar → Operatori
-// Valori ufficiali verificati API v3:
-// 1=Lavanda, 2=Salvia, 3=Vinaccia, 4=Fenicottero, 5=Banana,
-// 6=Mandarino, 7=Pavone, 8=Grafite, 9=Mirtillo, 10=Basilico, 11=Pomodoro
 const OPERATORS = {
     '11': { name: 'FABIO CATALDI',       colorName: 'Pomodoro',    hex: '#D50000' },
     '4':  { name: 'GIOVANNI CAFARO',     colorName: 'Fenicottero', hex: '#E67C73' },
@@ -679,11 +907,14 @@ let tokenClient;
 let accessToken = null;
 let currentYear  = new Date().getFullYear();
 let currentMonth = new Date().getMonth();
-let currentData  = null;
+let currentData  = null;      // dati grezzi completi del mese
+let filteredData = null;      // dati filtrati per il periodo selezionato
+let allMonthEvents = [];      // tutti gli eventi del mese
 let calendars    = [];
 let selectedCalendarId = 'primary';
+let selectedWeek = 0;         // 0 = mese intero, 1..N = settimana
+let weeksInMonth = [];        // array di { label, start, end }
 
-// Chiave localStorage per ricordare se l'utente ha già fatto login
 const LS_LOGGED_IN = 'gcal_tracker_logged_in';
 
 // ============================================================
@@ -700,31 +931,23 @@ function initApp() {
         client_id: CLIENT_ID,
         scope: 'https://www.googleapis.com/auth/calendar.readonly',
         callback: handleTokenResponse,
-        // prompt vuoto = nessuna schermata di consenso se già autorizzato
         prompt: '',
     });
 
     updateMonthDisplay();
 
-    // Se l'utente aveva già fatto login in precedenza, prova il rinnovo silenzioso
     if (localStorage.getItem(LS_LOGGED_IN) === 'true') {
         silentLogin();
     }
 }
 
-/**
- * Tentativo di login silenzioso (senza popup, sfrutta la sessione Google attiva).
- * Se fallisce (nessuna sessione Google attiva), mostra la schermata di login.
- */
 function silentLogin() {
     if (!tokenClient) { return; }
-    // prompt:'' = login silenzioso; se non riesce Google mostrerà una schermata minima
     tokenClient.requestAccessToken({ prompt: '' });
 }
 
 function handleTokenResponse(response) {
     if (response.error) {
-        // Se il login silenzioso fallisce mostriamo la schermata manuale
         if (response.error === 'interaction_required' ||
             response.error === 'access_denied') {
             localStorage.removeItem(LS_LOGGED_IN);
@@ -744,7 +967,6 @@ function login() {
         showError('Libreria Google non ancora caricata. Riprova tra qualche secondo.');
         return;
     }
-    // Prima volta (o dopo logout esplicito): mostra selezione account
     tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
 
@@ -774,7 +996,7 @@ async function onLoginSuccess() {
 }
 
 // ============================================================
-// RINNOVO AUTOMATICO TOKEN (ogni 45 minuti, scade dopo 1h)
+// RINNOVO AUTOMATICO TOKEN
 // ============================================================
 
 setInterval(function() {
@@ -793,7 +1015,6 @@ async function apiCall(url) {
     });
 
     if (response.status === 401) {
-        // Token scaduto: tenta rinnovo silenzioso automatico
         accessToken = null;
         silentLogin();
         throw new Error('Token expired');
@@ -853,9 +1074,12 @@ async function fetchAllEvents(year, month) {
 async function loadEvents() {
     showLoading(true);
     try {
-        const events = await fetchAllEvents(currentYear, currentMonth);
-        currentData = calculateFormations(events);
-        renderDashboard(currentData);
+        allMonthEvents = await fetchAllEvents(currentYear, currentMonth);
+        // Reset to full month view
+        selectedWeek = 0;
+        weeksInMonth = getWeeksInMonth(currentYear, currentMonth);
+        renderWeekTabs();
+        applyPeriodFilter();
     } catch (e) {
         if (e.message !== 'Token expired') {
             showError('Errore nel caricamento: ' + e.message);
@@ -863,6 +1087,86 @@ async function loadEvents() {
     } finally {
         showLoading(false);
     }
+}
+
+// ============================================================
+// GESTIONE SETTIMANE
+// ============================================================
+
+function getWeeksInMonth(year, month) {
+    const weeks = [];
+    const firstDay = new Date(year, month, 1);
+    const lastDay  = new Date(year, month + 1, 0);
+
+    // Trova il lunedì della prima settimana (anche se cade nel mese precedente)
+    let weekStart = new Date(firstDay);
+    const dow = weekStart.getDay(); // 0=Dom, 1=Lun...
+    const toMonday = dow === 0 ? -6 : 1 - dow;
+    weekStart.setDate(weekStart.getDate() + toMonday);
+
+    let weekNum = 1;
+    while (weekStart <= lastDay) {
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        // Range visibile clippato al mese
+        const visStart = new Date(Math.max(weekStart.getTime(), firstDay.getTime()));
+        const visEnd   = new Date(Math.min(weekEnd.getTime(), lastDay.getTime()));
+
+        const fmt = d => d.getDate();
+        weeks.push({
+            label: 'Sett. ' + weekNum + ' (' + fmt(visStart) + '–' + fmt(visEnd) + ' ' + MESI[month].substring(0, 3) + ')',
+            start: new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate(), 0, 0, 0),
+            end:   new Date(weekEnd.getFullYear(),   weekEnd.getMonth(),   weekEnd.getDate(),   23, 59, 59),
+        });
+
+        weekStart.setDate(weekStart.getDate() + 7);
+        weekNum++;
+    }
+    return weeks;
+}
+
+function renderWeekTabs() {
+    const container = document.getElementById('week-tabs');
+    container.innerHTML = '';
+
+    // Tab "Tutto il mese"
+    const allTab = document.createElement('button');
+    allTab.className = 'week-tab' + (selectedWeek === 0 ? ' active' : '');
+    allTab.textContent = MESI[currentMonth] + ' ' + currentYear;
+    allTab.onclick = () => selectWeek(0);
+    container.appendChild(allTab);
+
+    weeksInMonth.forEach((w, i) => {
+        const btn = document.createElement('button');
+        btn.className = 'week-tab' + (selectedWeek === i + 1 ? ' active' : '');
+        btn.textContent = w.label;
+        btn.onclick = () => selectWeek(i + 1);
+        container.appendChild(btn);
+    });
+}
+
+function selectWeek(weekIndex) {
+    selectedWeek = weekIndex;
+    renderWeekTabs();
+    applyPeriodFilter();
+}
+
+function applyPeriodFilter() {
+    let eventsToUse = allMonthEvents;
+
+    if (selectedWeek > 0) {
+        const week = weeksInMonth[selectedWeek - 1];
+        eventsToUse = allMonthEvents.filter(event => {
+            if (!event.start || !event.start.dateTime) return false;
+            const start = new Date(event.start.dateTime);
+            return start >= week.start && start <= week.end;
+        });
+    }
+
+    currentData = calculateFormations(allMonthEvents);  // dati completi per %
+    filteredData = calculateFormations(eventsToUse);    // dati del periodo
+    renderDashboard(filteredData, currentData.totalFormations);
 }
 
 // ============================================================
@@ -944,7 +1248,7 @@ function renderCalendarSelector() {
     });
 }
 
-function renderDashboard(data) {
+function renderDashboard(data, grandTotal) {
     document.getElementById('total-formations').textContent = data.totalFormations;
     document.getElementById('total-hours').textContent      = formatHours(data.totalMinutes);
     document.getElementById('total-events').textContent     = data.totalEvents;
@@ -958,17 +1262,20 @@ function renderDashboard(data) {
     });
 
     if (data.totalEvents === 0) {
+        const label = selectedWeek === 0
+            ? MESI[currentMonth] + ' ' + currentYear
+            : weeksInMonth[selectedWeek - 1].label;
         grid.innerHTML = '<div class="empty-state">'
             + '<div class="empty-icon">📅</div>'
             + '<h3>Nessuna formazione trovata</h3>'
-            + '<p>Non ci sono eventi con colore assegnato per ' + MESI[currentMonth] + ' ' + currentYear + '</p>'
+            + '<p>Non ci sono eventi con colore assegnato per ' + label + '</p>'
             + '</div>';
         grid.style.display = 'block';
         return;
     }
 
     grid.style.display = 'grid';
-    sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, data.totalFormations)));
+    sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, grandTotal)));
 }
 
 function createOperatorCard(op, total) {
@@ -978,19 +1285,8 @@ function createOperatorCard(op, total) {
     card.className = 'operator-card' + (op.formations > 0 ? ' has-data' : '');
     card.style.setProperty('--op-color', op.hex);
 
-    let detailsHTML = '';
-    if (op.events.length > 0) {
-        const rows = op.events.map(e =>
-            '<div class="event-row">'
-            + '<span class="event-date">' + formatDate(e.start) + '</span>'
-            + '<span class="event-title">' + escapeHtml(e.title) + '</span>'
-            + '<span class="event-duration">' + formatDuration(e.duration) + ' → <strong>' + e.formations + '</strong></span>'
-            + '</div>'
-        ).join('');
-
-        detailsHTML =
-            '<button class="toggle-details" onclick="toggleDetails(this)">Mostra dettagli ▼</button>'
-            + '<div class="event-details">' + rows + '</div>';
+    if (op.formations > 0) {
+        card.addEventListener('click', () => openDetailsModal(op.colorId));
     }
 
     card.innerHTML =
@@ -1007,13 +1303,87 @@ function createOperatorCard(op, total) {
         + '<div class="card-footer">'
         + '<div class="stat"><span class="stat-value">' + formatHours(op.totalMinutes) + '</span><span class="stat-label">ore</span></div>'
         + '<div class="stat"><span class="stat-value">' + op.eventCount + '</span><span class="stat-label">eventi</span></div>'
-        + '<div class="stat"><span class="stat-value">' + percentage + '%</span><span class="stat-label">del totale</span></div>'
+        + '<div class="stat"><span class="stat-value">' + percentage + '%</span><span class="stat-label">del mese</span></div>'
         + '</div>'
         + '<div class="progress-bar"><div class="progress-fill" style="width:' + percentage + '%;background:' + op.hex + '"></div></div>'
-        + detailsHTML;
+        + (op.formations > 0 ? '<span class="card-hint">🔍 clicca per i dettagli</span>' : '');
 
     return card;
 }
+
+// ============================================================
+// MODAL POPUP DETTAGLI
+// ============================================================
+
+function openDetailsModal(colorId) {
+    const op = filteredData ? filteredData.operators[colorId] : null;
+    if (!op) return;
+
+    document.getElementById('modal-dot').style.background = op.hex;
+    document.getElementById('modal-op-name').textContent  = op.name;
+    document.getElementById('modal-op-color').textContent = op.colorName;
+
+    const periodLabel = selectedWeek === 0
+        ? MESI[currentMonth] + ' ' + currentYear
+        : weeksInMonth[selectedWeek - 1].label;
+    document.getElementById('modal-period-badge').textContent = periodLabel;
+
+    document.getElementById('modal-formations').textContent = op.formations;
+    document.getElementById('modal-formations').style.color = op.hex;
+    document.getElementById('modal-hours').textContent      = formatHours(op.totalMinutes);
+    document.getElementById('modal-events').textContent     = op.eventCount;
+
+    const listEl = document.getElementById('modal-events-list');
+
+    if (op.events.length === 0) {
+        listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
+    } else {
+        // Ordina per data
+        const sorted = [...op.events].sort((a, b) => a.start - b.start);
+        listEl.innerHTML = sorted.map((e, i) =>
+            '<div class="modal-event-row">'
+            + '<div class="modal-event-num">' + (i + 1) + '</div>'
+            + '<div class="modal-event-info">'
+            + '<div class="modal-event-title">' + escapeHtml(e.title) + '</div>'
+            + '<div class="modal-event-date">'
+            + formatDateFull(e.start) + ' → ' + formatTime(e.end)
+            + '</div>'
+            + '</div>'
+            + '<div class="modal-event-badge">'
+            + '<span class="modal-event-duration">' + formatDuration(e.duration) + '</span>'
+            + '<span class="modal-event-formations" style="background:' + op.hex + '">'
+            + e.formations + ' form.'
+            + '</span>'
+            + '</div>'
+            + '</div>'
+        ).join('');
+    }
+
+    document.getElementById('modal-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function handleOverlayClick(event) {
+    if (event.target === document.getElementById('modal-overlay')) {
+        closeModal();
+    }
+}
+
+// Chiudi modal con Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeModal();
+        return;
+    }
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    if (e.key === 'ArrowLeft')  changeMonth(-1);
+    if (e.key === 'ArrowRight') changeMonth(1);
+});
 
 // ============================================================
 // NAVIGAZIONE & INTERAZIONI
@@ -1023,6 +1393,7 @@ function changeMonth(delta) {
     currentMonth += delta;
     if (currentMonth > 11) { currentMonth = 0; currentYear++; }
     if (currentMonth < 0)  { currentMonth = 11; currentYear--; }
+    selectedWeek = 0;
     updateMonthDisplay();
     if (accessToken) loadEvents();
 }
@@ -1031,6 +1402,7 @@ function goToToday() {
     const now = new Date();
     currentYear  = now.getFullYear();
     currentMonth = now.getMonth();
+    selectedWeek = 0;
     updateMonthDisplay();
     if (accessToken) loadEvents();
 }
@@ -1038,13 +1410,6 @@ function goToToday() {
 function changeCalendar(calId) {
     selectedCalendarId = calId;
     if (accessToken) loadEvents();
-}
-
-function toggleDetails(btn) {
-    const details = btn.nextElementSibling;
-    const isHidden = details.style.display === 'none' || !details.style.display;
-    details.style.display = isHidden ? 'block' : 'none';
-    btn.textContent = isHidden ? 'Nascondi dettagli ▲' : 'Mostra dettagli ▼';
 }
 
 function refreshData() {
@@ -1056,16 +1421,21 @@ function refreshData() {
 // ============================================================
 
 function exportCSV() {
-    if (!currentData) { showError('Nessun dato da esportare.'); return; }
+    if (!filteredData) { showError('Nessun dato da esportare.'); return; }
+
+    const periodLabel = selectedWeek === 0
+        ? MESI[currentMonth] + '_' + currentYear
+        : 'Sett' + selectedWeek + '_' + MESI[currentMonth] + '_' + currentYear;
 
     let csv = '\uFEFF'; // BOM UTF-8
     csv += 'Operatore;Colore;Formazioni;Ore Totali;N. Eventi;% sul Totale\n';
 
-    Object.values(currentData.operators)
+    Object.values(filteredData.operators)
         .sort((a, b) => b.formations - a.formations)
         .forEach(op => {
-            const pct = currentData.totalFormations > 0
-                ? ((op.formations / currentData.totalFormations) * 100).toFixed(1)
+            const grandTotal = currentData ? currentData.totalFormations : filteredData.totalFormations;
+            const pct = grandTotal > 0
+                ? ((op.formations / grandTotal) * 100).toFixed(1)
                 : '0.0';
             csv += escapeCSV(op.name) + ';'
                 + escapeCSV(op.colorName) + ';'
@@ -1076,15 +1446,15 @@ function exportCSV() {
         });
 
     csv += '\nTOTALE;;'
-        + currentData.totalFormations + ';'
-        + formatHours(currentData.totalMinutes) + ';'
-        + currentData.totalEvents + ';100%\n';
+        + filteredData.totalFormations + ';'
+        + formatHours(filteredData.totalMinutes) + ';'
+        + filteredData.totalEvents + ';–\n';
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const url  = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href     = url;
-    link.download = 'formazioni_' + MESI[currentMonth] + '_' + currentYear + '.csv';
+    link.download = 'formazioni_' + periodLabel + '.csv';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1112,11 +1482,15 @@ function formatDuration(minutes) {
     return h + 'h ' + m + 'm';
 }
 
-function formatDate(date) {
+function formatDateFull(date) {
     return date.toLocaleDateString('it-IT', {
-        day: '2-digit', month: '2-digit',
+        weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric',
         hour: '2-digit', minute: '2-digit'
     });
+}
+
+function formatTime(date) {
+    return date.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
 }
 
 function escapeHtml(text) {
@@ -1151,13 +1525,6 @@ function showError(message) {
     document.body.appendChild(toast);
     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 6000);
 }
-
-// Navigazione da tastiera
-document.addEventListener('keydown', function(e) {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
-    if (e.key === 'ArrowLeft')  changeMonth(-1);
-    if (e.key === 'ArrowRight') changeMonth(1);
-});
 
 // Avvia app quando GIS è pronto
 window.addEventListener('load', function() {
