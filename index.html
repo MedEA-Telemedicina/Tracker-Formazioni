@@ -435,6 +435,28 @@ header select option { background: #1a1a2e; color: white; }
     border-radius: 0 2px 2px 0;
 }
 
+/* Totali mensili mostrati quando si filtra per settimana */
+.card-footer-month {
+    display: flex;
+    justify-content: space-around;
+    padding: 0.4rem 1rem 0.55rem;
+    background: linear-gradient(135deg, rgba(66,133,244,0.07), rgba(66,133,244,0.03));
+    border-top: 1px dashed rgba(66,133,244,0.3);
+}
+.card-footer-month .stat-value { color: #4285f4; }
+.card-footer-month .stat-label { color: #4285f4; opacity: 0.75; }
+.card-footer-month-title {
+    width: 100%;
+    text-align: center;
+    font-size: 0.58rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #4285f4;
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+}
+
 /* Card hint for clickable */
 .card-hint {
     display: block;
@@ -1566,15 +1588,34 @@ function createOperatorCard(op, total) {
         + '</div></div>'
         + '<div class="card-body">'
         + '<div class="formation-count" style="color:' + op.hex + '">' + op.formations + '</div>'
-        + '<div class="formation-label">formazioni</div>'
+        + '<div class="formation-label">dispositivi</div>'
         + '</div>'
         + '<div class="card-footer">'
         + '<div class="stat"><span class="stat-value">' + formatHours(op.totalMinutes) + '</span><span class="stat-label">ore</span></div>'
-        + '<div class="stat"><span class="stat-value">' + op.eventCount + '</span><span class="stat-label">eventi</span></div>'
+        + '<div class="stat"><span class="stat-value">' + op.eventCount + '</span><span class="stat-label">formazioni</span></div>'
         + '<div class="stat"><span class="stat-value">' + percentage + '%</span><span class="stat-label">del mese</span></div>'
         + '</div>'
         + '<div class="progress-bar"><div class="progress-fill" style="width:' + percentage + '%;background:' + op.hex + '"></div></div>'
         + (op.formations > 0 ? '<span class="card-hint">🔍 clicca per i dettagli</span>' : '');
+
+    // Se è selezionata una settimana, mostra i totali mensili in un secondo footer colorato
+    if (selectedWeek > 0 && currentData) {
+        const monthOp = currentData.operators[op.colorId];
+        if (monthOp) {
+            const monthPct = currentData.totalFormations > 0
+                ? ((monthOp.formations / currentData.totalFormations) * 100).toFixed(1)
+                : '0.0';
+            card.innerHTML +=
+                '<div class="card-footer-month">'
+                + '<div style="width:100%"><div class="card-footer-month-title">📅 tot. mese</div>'
+                + '<div style="display:flex;justify-content:space-around">'
+                + '<div class="stat"><span class="stat-value">' + formatHours(monthOp.totalMinutes) + '</span><span class="stat-label">ore</span></div>'
+                + '<div class="stat"><span class="stat-value">' + monthOp.eventCount + '</span><span class="stat-label">formazioni</span></div>'
+                + '<div class="stat"><span class="stat-value">' + monthPct + '%</span><span class="stat-label">del mese</span></div>'
+                + '</div></div>'
+                + '</div>';
+        }
+    }
 
     return card;
 }
@@ -1700,7 +1741,7 @@ function openDetailsModal(colorId) {
                     + '<div class="modal-event-badge">'
                     + '<span class="modal-event-duration">' + formatDuration(e.duration) + '</span>'
                     + '<span class="modal-event-formations" style="background:' + op.hex + '">'
-                    + e.formations + ' form.'
+                    + e.formations + ' disp.'
                     + '</span>'
                     + '</div>'
                     + '</div>';
