@@ -772,6 +772,130 @@ header select option { background: #1a1a2e; color: white; }
 }
 
 /* ============================================================
+   DEBUG PANEL
+   ============================================================ */
+
+.dbg-panel {
+    background: #f6f8ff;
+    border: 1px solid #dde3f5;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    font-size: 0.78rem;
+}
+
+.dbg-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 0.85rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #dde3f5;
+}
+
+.dbg-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem;
+    margin-bottom: 0.85rem;
+}
+
+.dbg-stat {
+    background: white;
+    border: 1px solid #e4e6ea;
+    border-radius: 7px;
+    padding: 0.4rem 0.65rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.dbg-lbl {
+    font-size: 0.62rem;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    line-height: 1.3;
+}
+
+.dbg-val {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #333;
+    display: flex;
+    align-items: center;
+}
+
+.dbg-events-hdr {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #888;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.4rem;
+}
+
+.dbg-events-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border: 1px solid #e4e6ea;
+    border-radius: 6px;
+    background: white;
+    margin-bottom: 0.85rem;
+}
+
+.dbg-events-list::-webkit-scrollbar { width: 4px; }
+.dbg-events-list::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+
+.dbg-ev-row {
+    display: grid;
+    grid-template-columns: 22px 110px 1fr 72px;
+    gap: 0.3rem;
+    padding: 0.32rem 0.5rem;
+    border-bottom: 1px solid #f5f5f5;
+    align-items: center;
+    font-size: 0.71rem;
+}
+
+.dbg-ev-row:last-child { border-bottom: none; }
+
+.dbg-ev-row.dbg-ev-pavone {
+    background: #e3f4ff;
+}
+
+.dbg-ev-n { color: #ccc; font-size: 0.62rem; }
+
+.dbg-ev-cid { color: #666; }
+.dbg-ev-cid strong { color: #333; }
+.dbg-ev-cid em { color: #039BE5; font-style: normal; margin-left: 2px; }
+
+.dbg-ev-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #333;
+}
+
+.dbg-ev-date { color: #aaa; text-align: right; font-variant-numeric: tabular-nums; }
+
+.dbg-hint {
+    font-size: 0.71rem;
+    color: #888;
+    background: #fffbe6;
+    border: 1px solid #ffe58f;
+    border-radius: 6px;
+    padding: 0.5rem 0.7rem;
+    line-height: 1.5;
+    margin-top: 0;
+}
+
+.dbg-hint code {
+    background: #f0f0f0;
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.68rem;
+}
+
+/* ============================================================
    PRINT STYLES
    ============================================================ */
 
@@ -1350,9 +1474,12 @@ function renderDashboard(data, grandTotal) {
     document.getElementById('total-hours').textContent      = formatHours(data.totalMinutes);
     document.getElementById('total-events').textContent     = data.totalEvents;
 
-    // Aggiorna il contatore "Da Associare" nella summary bar (Pavone, colorId '7')
-    const pavoneOp = data.operators['7'];
-    const daAssociareCount = pavoneOp ? pavoneOp.eventCount : 0;
+    // "Da Associare" usa SEMPRE i dati del mese intero (currentData), non quelli filtrati per settimana
+    // Così gli eventi Pavone in altri giorni non spariscono quando è auto-selezionata la settimana corrente
+    const pavoneMonthOp = (typeof currentData !== 'undefined' && currentData)
+        ? currentData.operators['7']
+        : data.operators['7'];
+    const daAssociareCount = pavoneMonthOp ? pavoneMonthOp.eventCount : 0;
     document.getElementById('da-associare-count').textContent = daAssociareCount;
 
     const grid = document.getElementById('operators-grid');
@@ -1438,17 +1565,71 @@ function openDaAssociareModal() {
     openDetailsModal('7');
 }
 
+// ============================================================
+// PANNELLO DI DEBUG – visibile quando Da Associare = 0
+// ============================================================
+
+function buildDaAssociareDebugPanel() {
+    const totalRaw   = allMonthEvents.length;
+    const withCid7   = allMonthEvents.filter(e => String(e.colorId) === '7').length;
+    const noCid      = allMonthEvents.filter(e => e.colorId === undefined || e.colorId === null).length;
+    const resolvedAs7 = allMonthEvents.filter(e => resolveColorId(e) === '7' && e.status !== 'cancelled').length;
+    const calBg      = selectedCalendarBgColor || '<em style="color:#bbb">non disponibile</em>';
+
+    let html = '<div class="dbg-panel">';
+    html += '<div class="dbg-title">🔍 Debug — nessun evento Pavone trovato</div>';
+
+    html += '<div class="dbg-stats">';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Tot. eventi nel mese</span><span class="dbg-val">' + totalRaw + '</span></div>';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Con colorId = 7 (Pavone)</span><span class="dbg-val" style="color:#039BE5">' + withCid7 + '</span></div>';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Risolti come Pavone</span><span class="dbg-val" style="color:#039BE5">' + resolvedAs7 + '</span></div>';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Senza colorId (ereditano colore calendario)</span><span class="dbg-val">' + noCid + '</span></div>';
+    html += '<div class="dbg-stat" style="grid-column:1/-1"><span class="dbg-lbl">Colore del calendario selezionato (backgroundColor)</span><span class="dbg-val">' + (selectedCalendarBgColor ? '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + escapeHtml(selectedCalendarBgColor) + ';margin-right:6px;vertical-align:middle"></span>' + escapeHtml(selectedCalendarBgColor) : '<em style="color:#bbb">non disponibile</em>') + '</span></div>';
+    html += '</div>';
+
+    if (totalRaw > 0) {
+        const sample = allMonthEvents.slice(0, 25);
+        html += '<div class="dbg-events-hdr">Campione eventi (primi ' + sample.length + ' su ' + totalRaw + '):</div>';
+        html += '<div class="dbg-events-list">';
+        sample.forEach(function(e, i) {
+            const cid      = (e.colorId !== undefined && e.colorId !== null) ? String(e.colorId) : '–';
+            const resolved = resolveColorId(e) || '–';
+            const title    = e.summary || '(senza titolo)';
+            const dateStr  = (e.start && (e.start.dateTime || e.start.date)) ? (e.start.dateTime || e.start.date).substring(0, 10) : '?';
+            const isPavone = resolved === '7';
+            html += '<div class="dbg-ev-row' + (isPavone ? ' dbg-ev-pavone' : '') + '">';
+            html += '<span class="dbg-ev-n">' + (i + 1) + '</span>';
+            html += '<span class="dbg-ev-cid" title="colorId grezzo → risolto">cid <strong>' + escapeHtml(cid) + '</strong><em>→' + escapeHtml(resolved) + '</em></span>';
+            html += '<span class="dbg-ev-title">' + escapeHtml(title) + '</span>';
+            html += '<span class="dbg-ev-date">' + escapeHtml(dateStr) + '</span>';
+            html += '</div>';
+        });
+        html += '</div>';
+    } else {
+        html += '<p style="text-align:center;color:#bbb;font-size:0.8rem;margin-top:1rem;">Nessun evento nel mese — il calendario potrebbe essere vuoto o la richiesta API non ha restituito risultati.</p>';
+    }
+
+    html += '<p class="dbg-hint">💡 Se ci sono eventi con <em>nessun colorId</em> e il calendario ha il colore Pavone (#039BE5) come backgroundColor, verranno catturati automaticamente. Se il colore non corrisponde, aggiorna la mappatura <code>PAVONE_HEX_VARIANTS</code>.</p>';
+    html += '</div>';
+    return html;
+}
+
 function openDetailsModal(colorId) {
-    const op = filteredData ? filteredData.operators[colorId] : null;
+    // Per "Da Associare" (Pavone, colorId='7') usa sempre i dati del mese intero
+    const dataSource = (colorId === '7' && currentData) ? currentData : filteredData;
+    const op = dataSource ? dataSource.operators[colorId] : null;
     if (!op) return;
 
     document.getElementById('modal-dot').style.background = op.hex;
     document.getElementById('modal-op-name').textContent  = op.name;
     document.getElementById('modal-op-color').textContent = op.colorName;
 
-    const periodLabel = selectedWeek === 0
+    // Pavone mostra sempre il badge del mese intero
+    const periodLabel = (colorId === '7')
         ? MESI[currentMonth] + ' ' + currentYear
-        : weeksInMonth[selectedWeek - 1].label;
+        : (selectedWeek === 0
+            ? MESI[currentMonth] + ' ' + currentYear
+            : weeksInMonth[selectedWeek - 1].label);
     document.getElementById('modal-period-badge').textContent = periodLabel;
 
     document.getElementById('modal-formations').textContent = op.formations;
@@ -1459,7 +1640,12 @@ function openDetailsModal(colorId) {
     const listEl = document.getElementById('modal-events-list');
 
     if (op.events.length === 0) {
-        listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
+        // Se Da Associare (Pavone) ha 0 eventi, mostra il pannello di debug
+        if (colorId === '7') {
+            listEl.innerHTML = buildDaAssociareDebugPanel();
+        } else {
+            listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
+        }
     } else {
         // Ordina per data
         const sorted = [...op.events].sort((a, b) => a.start - b.start);
