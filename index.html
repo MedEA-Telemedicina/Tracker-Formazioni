@@ -1207,8 +1207,11 @@ function applyPeriodFilter() {
     if (selectedWeek > 0) {
         const week = weeksInMonth[selectedWeek - 1];
         eventsToUse = allMonthEvents.filter(event => {
-            if (!event.start || !event.start.dateTime) return false;
-            const start = new Date(event.start.dateTime);
+            if (!event.start) return false;
+            const start = event.start.dateTime
+                ? new Date(event.start.dateTime)
+                : event.start.date ? new Date(event.start.date) : null;
+            if (!start) return false;
             return start >= week.start && start <= week.end;
         });
     }
@@ -1271,10 +1274,19 @@ function calculateFormations(events) {
         const colorId = resolveColorId(event);
         if (!colorId || !OPERATORS[colorId]) return;
         if (event.status === 'cancelled') return;
-        if (!event.start.dateTime || !event.end.dateTime) return;
 
-        const startTime = new Date(event.start.dateTime);
-        const endTime   = new Date(event.end.dateTime);
+        let startTime, endTime;
+        if (event.start.dateTime && event.end.dateTime) {
+            startTime = new Date(event.start.dateTime);
+            endTime   = new Date(event.end.dateTime);
+        } else if (event.start.date && event.end.date) {
+            // Evento tutto il giorno: start.date incluso, end.date escluso (giorno dopo)
+            startTime = new Date(event.start.date);
+            endTime   = new Date(event.end.date);
+        } else {
+            return;
+        }
+
         const durationMinutes = (endTime - startTime) / (1000 * 60);
         if (durationMinutes <= 0) return;
 
