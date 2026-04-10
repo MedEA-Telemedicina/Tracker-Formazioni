@@ -651,6 +651,34 @@ header select option { background: #1a1a2e; color: white; }
     color: white;
 }
 
+.modal-day-group {
+    margin-bottom: 0.25rem;
+}
+
+.modal-day-header {
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-secondary);
+    padding: 0.45rem 0.6rem;
+    border-radius: var(--radius-sm);
+    margin: 0.5rem 0 0.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.modal-day-header::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
 .modal-empty {
     text-align: center;
     padding: 2.5rem 1rem;
@@ -967,7 +995,7 @@ header select option { background: #1a1a2e; color: white; }
     <!-- Summary Bar -->
     <div id="summary-bar">
         <div class="summary-item">
-            <span class="summary-label">Totale Formazioni</span>
+            <span class="summary-label">Totale Dispositivi</span>
             <span class="summary-value" id="total-formations">–</span>
         </div>
         <div class="summary-item">
@@ -975,7 +1003,7 @@ header select option { background: #1a1a2e; color: white; }
             <span class="summary-value" id="total-hours">–</span>
         </div>
         <div class="summary-item">
-            <span class="summary-label">Eventi</span>
+            <span class="summary-label">Formazioni</span>
             <span class="summary-value" id="total-events">–</span>
         </div>
         <div class="summary-item da-associare-item" id="da-associare-summary" onclick="openDaAssociareModal()" title="Mostra formazioni da associare">
@@ -1010,7 +1038,7 @@ header select option { background: #1a1a2e; color: white; }
         <div class="modal-stats">
             <div class="modal-stat">
                 <span class="modal-stat-value" id="modal-formations" style="color:#4285f4">–</span>
-                <span class="modal-stat-label">Formazioni</span>
+                <span class="modal-stat-label">Dispositivi</span>
             </div>
             <div class="modal-stat">
                 <span class="modal-stat-value" id="modal-hours">–</span>
@@ -1018,7 +1046,7 @@ header select option { background: #1a1a2e; color: white; }
             </div>
             <div class="modal-stat">
                 <span class="modal-stat-value" id="modal-events">–</span>
-                <span class="modal-stat-label">Eventi</span>
+                <span class="modal-stat-label">Formazioni</span>
             </div>
         </div>
         <div class="modal-body" id="modal-events-list"></div>
@@ -1643,23 +1671,44 @@ function openDetailsModal(colorId) {
     } else {
         // Ordina per data
         const sorted = [...op.events].sort((a, b) => a.start - b.start);
-        listEl.innerHTML = sorted.map((e, i) =>
-            '<div class="modal-event-row">'
-            + '<div class="modal-event-num">' + (i + 1) + '</div>'
-            + '<div class="modal-event-info">'
-            + '<div class="modal-event-title">' + escapeHtml(e.title) + '</div>'
-            + '<div class="modal-event-date">'
-            + formatDateFull(e.start) + ' → ' + formatTime(e.end)
-            + '</div>'
-            + '</div>'
-            + '<div class="modal-event-badge">'
-            + '<span class="modal-event-duration">' + formatDuration(e.duration) + '</span>'
-            + '<span class="modal-event-formations" style="background:' + op.hex + '">'
-            + e.formations + ' form.'
-            + '</span>'
-            + '</div>'
-            + '</div>'
-        ).join('');
+
+        // Raggruppa per giorno
+        const byDay = {};
+        const dayKeys = [];
+        sorted.forEach(e => {
+            const dayKey = e.start.toLocaleDateString('it-IT', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+            if (!byDay[dayKey]) { byDay[dayKey] = []; dayKeys.push(dayKey); }
+            byDay[dayKey].push(e);
+        });
+
+        let html = '';
+        let globalIdx = 1;
+        dayKeys.forEach(dayLabel => {
+            html += '<div class="modal-day-group">';
+            html += '<div class="modal-day-header">' + dayLabel + '</div>';
+            byDay[dayLabel].forEach(e => {
+                html += '<div class="modal-event-row">'
+                    + '<div class="modal-event-num">' + globalIdx + '</div>'
+                    + '<div class="modal-event-info">'
+                    + '<div class="modal-event-title">' + escapeHtml(e.title) + '</div>'
+                    + '<div class="modal-event-date">'
+                    + formatTime(e.start) + ' → ' + formatTime(e.end)
+                    + '</div>'
+                    + '</div>'
+                    + '<div class="modal-event-badge">'
+                    + '<span class="modal-event-duration">' + formatDuration(e.duration) + '</span>'
+                    + '<span class="modal-event-formations" style="background:' + op.hex + '">'
+                    + e.formations + ' form.'
+                    + '</span>'
+                    + '</div>'
+                    + '</div>';
+                globalIdx++;
+            });
+            html += '</div>';
+        });
+        listEl.innerHTML = html;
     }
 
     document.getElementById('modal-overlay').classList.add('open');
