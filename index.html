@@ -499,6 +499,146 @@ header select option { background: #ffffff; color: var(--text-primary); }
    MODAL POPUP
    ============================================================ */
 
+/* ── SEARCH MODAL ── */
+#search-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 1000;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 3rem 1rem 1rem;
+    animation: fadeIn 0.2s ease;
+}
+#search-overlay.open { display: flex; }
+.search-box {
+    background: white;
+    border-radius: var(--radius);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    width: 100%;
+    max-width: 680px;
+    max-height: 82vh;
+    display: flex;
+    flex-direction: column;
+    animation: modalIn 0.25s cubic-bezier(0.4,0,0.2,1);
+    overflow: hidden;
+}
+.search-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+.search-modal-icon { font-size: 1.3rem; flex-shrink: 0; }
+.search-modal-title { flex: 1; }
+.search-modal-title h3 { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin: 0; }
+.search-modal-title span { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.search-input-wrap {
+    display: flex;
+    gap: 0.5rem;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+}
+#search-input {
+    flex: 1;
+    padding: 0.55rem 0.9rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-family: inherit;
+    outline: none;
+    transition: border-color var(--transition);
+    color: var(--text-primary);
+}
+#search-input:focus { border-color: #0072af; }
+.search-go-btn {
+    padding: 0.55rem 1.2rem;
+    background: #0072af;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition);
+}
+.search-go-btn:hover { background: #005a8e; }
+#search-results-area {
+    overflow-y: auto;
+    flex: 1;
+    padding: 0.5rem 1.5rem 1.5rem;
+}
+.search-placeholder {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding: 2.5rem 0;
+}
+.search-result-count {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.75rem 0 0.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+}
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background var(--transition);
+}
+.search-result-item:last-child { border-bottom: none; }
+.search-op-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.search-result-main { flex: 1; min-width: 0; }
+.search-result-title {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.search-result-meta {
+    font-size: 0.77rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+}
+.search-result-op {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    color: white;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.search-loading {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding: 2rem 0;
+}
+.search-no-results {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    padding: 2rem 0;
+}
+
 #modal-overlay {
     display: none;
     position: fixed;
@@ -1020,6 +1160,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
             <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario" style="display:none;">
                 <option>Caricamento...</option>
             </select>
+            <button onclick="openSearchModal()" title="Cerca formazione per cliente">🔍 Cerca</button>
             <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
             <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
             <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
@@ -1066,6 +1207,26 @@ header select option { background: #ffffff; color: var(--text-primary); }
     <!-- Operators Grid -->
     <div id="operators-grid"></div>
 
+</div>
+
+<!-- Search Modal -->
+<div id="search-overlay" onclick="handleSearchOverlayClick(event)">
+    <div class="search-box">
+        <div class="search-modal-header">
+            <span class="search-modal-icon">🔍</span>
+            <div class="search-modal-title">
+                <h3>Cerca Formazione</h3>
+                <span>Ricerca per nome cliente su tutti i dati disponibili</span>
+            </div>
+            <button class="modal-close" onclick="closeSearchModal()" title="Chiudi">✕</button>
+        </div>
+        <div class="search-input-wrap">
+            <input type="text" id="search-input" placeholder="Inserisci nome cliente..." autocomplete="off"
+                   oninput="onSearchInput()" onkeydown="if(event.key==='Enter') doSearch()"/>
+            <button class="search-go-btn" onclick="doSearch()">Cerca</button>
+        </div>
+        <div id="search-results-area"></div>
+    </div>
 </div>
 
 <!-- Modal Popup -->
@@ -1646,6 +1807,129 @@ function createOperatorCard(op, total) {
 // MODAL POPUP DETTAGLI
 // ============================================================
 
+// ============================================================
+// RICERCA FORMAZIONE
+// ============================================================
+
+let searchDebounceTimer = null;
+
+function openSearchModal() {
+    document.getElementById('search-overlay').classList.add('open');
+    document.getElementById('search-results-area').innerHTML =
+        '<div class="search-placeholder">🔍 Inserisci il nome del cliente e premi <strong>Cerca</strong></div>';
+    setTimeout(() => document.getElementById('search-input').focus(), 100);
+}
+
+function closeSearchModal() {
+    document.getElementById('search-overlay').classList.remove('open');
+    document.getElementById('search-input').value = '';
+}
+
+function handleSearchOverlayClick(event) {
+    if (event.target === document.getElementById('search-overlay')) closeSearchModal();
+}
+
+function onSearchInput() {
+    clearTimeout(searchDebounceTimer);
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) {
+        document.getElementById('search-results-area').innerHTML =
+            '<div class="search-placeholder">🔍 Inserisci il nome del cliente e premi <strong>Cerca</strong></div>';
+        return;
+    }
+    searchDebounceTimer = setTimeout(doSearch, 500);
+}
+
+async function doSearch() {
+    const q = document.getElementById('search-input').value.trim();
+    if (!q) return;
+    if (!accessToken) {
+        document.getElementById('search-results-area').innerHTML =
+            '<div class="search-no-results">⚠️ Devi essere autenticato per eseguire la ricerca.</div>';
+        return;
+    }
+
+    const area = document.getElementById('search-results-area');
+    area.innerHTML = '<div class="search-loading">⏳ Ricerca in corso...</div>';
+
+    try {
+        // Cerca su un range di 2 anni
+        const now = new Date();
+        const twoYearsAgo = new Date(now.getFullYear() - 2, now.getMonth(), now.getDate());
+        const oneYearAhead = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate());
+
+        const calId = encodeURIComponent(selectedCalendarId || 'primary');
+        const params = new URLSearchParams({
+            q: q,
+            timeMin: twoYearsAgo.toISOString(),
+            timeMax: oneYearAhead.toISOString(),
+            singleEvents: 'true',
+            orderBy: 'startTime',
+            maxResults: '200'
+        });
+
+        const resp = await fetch(
+            'https://www.googleapis.com/calendar/v3/calendars/' + calId + '/events?' + params,
+            { headers: { Authorization: 'Bearer ' + accessToken } }
+        );
+        const data = await resp.json();
+
+        if (data.error) {
+            area.innerHTML = '<div class="search-no-results">❌ Errore API: ' + escapeHtml(data.error.message) + '</div>';
+            return;
+        }
+
+        const events = (data.items || []).filter(e =>
+            e.status !== 'cancelled' &&
+            e.start && e.start.dateTime && e.end && e.end.dateTime
+        );
+
+        renderSearchResults(events, q);
+    } catch (err) {
+        area.innerHTML = '<div class="search-no-results">❌ Errore durante la ricerca: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+function renderSearchResults(events, query) {
+    const area = document.getElementById('search-results-area');
+
+    if (events.length === 0) {
+        area.innerHTML = '<div class="search-no-results">Nessuna formazione trovata per <strong>"' + escapeHtml(query) + '"</strong></div>';
+        return;
+    }
+
+    let html = '<div class="search-result-count">' + events.length + ' risultat' + (events.length === 1 ? 'o' : 'i') + ' trovati</div>';
+
+    events.forEach(e => {
+        const colorId = resolveColorId(e);
+        const op = colorId && OPERATORS[colorId] ? OPERATORS[colorId] : null;
+        const opName = op ? op.name : 'Non associato';
+        const opHex  = op ? op.hex : '#aaa';
+
+        const start = new Date(e.start.dateTime);
+        const end   = new Date(e.end.dateTime);
+        const dateStr = start.toLocaleDateString('it-IT', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+        const timeStr = start.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' })
+                      + ' – ' + end.toLocaleTimeString('it-IT', { hour: '2-digit', minute: '2-digit' });
+        const durMin  = Math.round((end - start) / 60000);
+        const durStr  = durMin >= 60
+            ? Math.floor(durMin/60) + 'h' + (durMin%60 ? ' ' + (durMin%60) + 'min' : '')
+            : durMin + ' min';
+        const title   = e.summary || '(Senza titolo)';
+
+        html += '<div class="search-result-item">'
+             + '<div class="search-op-dot" style="background:' + opHex + '"></div>'
+             + '<div class="search-result-main">'
+             +   '<div class="search-result-title">' + escapeHtml(title) + '</div>'
+             +   '<div class="search-result-meta">' + escapeHtml(dateStr) + ' &nbsp;·&nbsp; ' + escapeHtml(timeStr) + ' &nbsp;·&nbsp; ' + durStr + '</div>'
+             + '</div>'
+             + '<div class="search-result-op" style="background:' + opHex + '">' + escapeHtml(opName) + '</div>'
+             + '</div>';
+    });
+
+    area.innerHTML = html;
+}
+
 function openDaAssociareModal() {
     // Scorri automaticamente alla settimana corrente prima di aprire il modale
     const today = new Date();
@@ -1802,6 +2086,7 @@ function handleOverlayClick(event) {
 // Chiudi modal con Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        closeSearchModal();
         closeModal();
         return;
     }
