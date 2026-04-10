@@ -141,7 +141,7 @@ header {
 .header-logo-block {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    align-items: center;
     gap: 0.1rem;
 }
 .header-logo {
@@ -151,9 +151,10 @@ header {
 }
 .header-subtitle {
     font-size: 0.7rem;
-    font-weight: 500;
-    color: var(--text-secondary);
+    font-weight: 600;
+    color: #0072af;
     letter-spacing: 0.02em;
+    text-align: center;
 }
 
 .header-right { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
@@ -1646,6 +1647,16 @@ function createOperatorCard(op, total) {
 // ============================================================
 
 function openDaAssociareModal() {
+    // Scorri automaticamente alla settimana corrente prima di aprire il modale
+    const today = new Date();
+    if (today.getFullYear() === currentYear && today.getMonth() === currentMonth) {
+        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        let foundWeek = 0;
+        weeksInMonth.forEach((w, i) => {
+            if (todayMidnight >= w.start && todayMidnight <= w.end) foundWeek = i + 1;
+        });
+        if (foundWeek !== selectedWeek) selectWeek(foundWeek);
+    }
     openDetailsModal('7');
 }
 
