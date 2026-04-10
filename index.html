@@ -1492,7 +1492,7 @@ function renderDashboard(data, grandTotal) {
     });
 
     // Calcola totalEvents escludendo Pavone per il messaggio "nessuna formazione"
-    const gridEvents = data.totalEvents - (pavoneOp ? pavoneOp.eventCount : 0);
+    const gridEvents = data.totalEvents - (pavoneMonthOp ? pavoneMonthOp.eventCount : 0);
 
     if (gridEvents === 0 && daAssociareCount > 0) {
         const label = selectedWeek === 0
