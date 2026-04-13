@@ -1916,6 +1916,42 @@ header select option { background: #ffffff; color: var(--text-primary); }
     position: relative;
 }
 
+
+.ranking-item.podium-clickable { cursor: pointer; position: relative; }
+.ranking-item.podium-clickable:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 8px 25px rgba(0,0,0,0.15); }
+.ranking-item.podium-clickable::after {
+    content: '🎴 Clicca per scaricare la card';
+    position: absolute; bottom: -18px; left: 50%; transform: translateX(-50%);
+    font-size: 0.65rem; color: var(--text-muted); opacity: 0;
+    transition: opacity 0.3s; white-space: nowrap;
+}
+.ranking-item.podium-clickable:hover::after { opacity: 1; }
+
+/* Podium card modal overlay */
+.podium-card-overlay {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.7); z-index: 10001;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeInOverlay 0.3s ease;
+}
+.podium-card-container {
+    background: var(--card-bg); border-radius: 16px; padding: 1.5rem;
+    text-align: center; max-width: 480px; width: 90%;
+    animation: scaleIn 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.podium-card-container canvas {
+    border-radius: 12px; max-width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+.podium-card-actions { margin-top: 1rem; display: flex; gap: 0.75rem; justify-content: center; }
+.podium-card-actions button {
+    padding: 0.6rem 1.5rem; border: none; border-radius: 10px;
+    font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s;
+}
+.podium-card-download { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+.podium-card-download:hover { transform: scale(1.05); box-shadow: 0 4px 15px rgba(102,126,234,0.4); }
+.podium-card-close { background: var(--border-color); color: var(--text-color); }
+.podium-card-close:hover { background: var(--hover-bg); }
+
 </style>
 <!-- SheetJS for Excel parsing -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -4409,7 +4445,9 @@ function buildRankingHTML(container, ops, grandTotal, periodLabel) {
         const mContent = idx < 3 ? medalEmoji[idx] : (idx + 1);
         const delay    = idx * 55;
 
-        html += '<div class="ranking-item" style="animation-delay:' + delay + 'ms;">';
+        const podiumClass = idx < 3 ? ' podium-clickable' : '';
+        const podiumData = idx < 3 ? ' data-podium="1" data-p-name="' + escapeHtml(op.name) + '" data-p-hex="' + op.hex + '" data-p-pos="' + (idx+1) + '" data-p-val="' + op.formations + '" data-p-pct="' + pct + '" data-p-period="' + escapeHtml(periodLabel) + '"' : '';
+        html += '<div class="ranking-item' + podiumClass + '" style="animation-delay:' + delay + 'ms;"' + podiumData + '>';
         html += '<div class="ranking-medal ' + mClass + '">' + mContent + '</div>';
         html += '<div class="ranking-info">';
         html += '<div class="ranking-name"><span class="ranking-color-dot" style="background:' + op.hex + ';"></span>' + escapeHtml(op.name) + '</div>';
@@ -4449,6 +4487,20 @@ function buildRankingHTML(container, ops, grandTotal, periodLabel) {
     }
 
     container.innerHTML = html;
+
+    // Event delegation for podium card clicks
+    container.querySelectorAll('[data-podium]').forEach(function(el) {
+        el.addEventListener('click', function() {
+            generatePodiumCard(
+                el.getAttribute('data-p-name'),
+                el.getAttribute('data-p-hex'),
+                parseInt(el.getAttribute('data-p-pos')),
+                parseInt(el.getAttribute('data-p-val')),
+                el.getAttribute('data-p-pct'),
+                el.getAttribute('data-p-period')
+            );
+        });
+    });
 }
 
 function setRankingPeriod(period) {
@@ -4467,6 +4519,147 @@ loadEvents = async function() {
 window.addEventListener('load', function() {
     initApp();
 });
+
+
+function generatePodiumCard(name, hex, position, formations, pct, periodLabel) {
+    const W = 600, H = 400;
+    const canvas = document.createElement('canvas');
+    canvas.width = W; canvas.height = H;
+    const ctx = canvas.getContext('2d');
+
+    // Background gradient based on position
+    const gradients = {
+        1: [['#FFD700','#FFA000','#FF6F00'], '🥇', 'CAMPIONE', '#4E342E'],
+        2: [['#E0E0E0','#9E9E9E','#616161'], '🥈', 'VICE-CAMPIONE', '#37474F'],
+        3: [['#CD7F32','#A0522D','#6D4C41'], '🥉', 'TERZO POSTO', '#3E2723']
+    };
+    const [colors, medal, title, darkColor] = gradients[position];
+
+    // Main gradient bg
+    const grad = ctx.createLinearGradient(0, 0, W, H);
+    grad.addColorStop(0, colors[0]);
+    grad.addColorStop(0.5, colors[1]);
+    grad.addColorStop(1, colors[2]);
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.roundRect(0, 0, W, H, 20);
+    ctx.fill();
+
+    // Decorative confetti circles
+    const confettiColors = ['#FF6B6B','#4ECDC4','#45B7D1','#96CEB4','#FFEAA7','#DDA0DD','#98D8C8','#F7DC6F'];
+    for (let i = 0; i < 35; i++) {
+        ctx.beginPath();
+        const cx = Math.random() * W, cy = Math.random() * H;
+        const r = Math.random() * 12 + 3;
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = confettiColors[i % confettiColors.length] + '40';
+        ctx.fill();
+    }
+
+    // Decorative stars
+    const starPositions = [[50,50],[550,50],[100,350],[500,340],[30,200],[570,200]];
+    ctx.font = '20px serif';
+    starPositions.forEach(([sx,sy]) => { ctx.fillText('✨', sx, sy); });
+
+    // Dark card in center
+    ctx.fillStyle = darkColor + 'E6';
+    ctx.beginPath();
+    ctx.roundRect(40, 40, W - 80, H - 80, 16);
+    ctx.fill();
+
+    // Inner border glow
+    ctx.strokeStyle = colors[0] + '80';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(44, 44, W - 88, H - 88, 14);
+    ctx.stroke();
+
+    // Medal emoji big
+    ctx.font = '64px serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(medal, W / 2, 110);
+
+    // Title
+    ctx.font = 'bold 18px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = colors[0];
+    ctx.letterSpacing = '4px';
+    ctx.fillText(title, W / 2, 145);
+    ctx.letterSpacing = '0px';
+
+    // Operator name
+    ctx.font = 'bold 32px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillText(name, W / 2, 195);
+
+    // Operator color dot
+    ctx.beginPath();
+    ctx.arc(W / 2, 220, 8, 0, Math.PI * 2);
+    ctx.fillStyle = hex;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Stats
+    ctx.font = 'bold 56px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = colors[0];
+    ctx.fillText(formations, W / 2, 290);
+
+    ctx.font = '16px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#ffffffCC';
+    ctx.fillText('dispositivi formati', W / 2, 312);
+
+    // Percentage badge
+    const pctText = pct + '%';
+    ctx.font = 'bold 14px "Segoe UI", system-ui, sans-serif';
+    const tw = ctx.measureText(pctText).width + 20;
+    ctx.fillStyle = hex;
+    ctx.beginPath();
+    ctx.roundRect(W / 2 - tw / 2, 322, tw, 26, 13);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.fillText(pctText, W / 2, 340);
+
+    // Period label at bottom
+    ctx.font = '13px "Segoe UI", system-ui, sans-serif';
+    ctx.fillStyle = '#ffffff99';
+    ctx.fillText('Tracker Formazioni — ' + periodLabel, W / 2, H - 55);
+
+    // Show overlay with card preview
+    const overlay = document.createElement('div');
+    overlay.className = 'podium-card-overlay';
+    overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+    const container = document.createElement('div');
+    container.className = 'podium-card-container';
+    container.innerHTML = '<h3 style="margin:0 0 1rem;font-size:1.1rem;">' + medal + ' Card di ' + escapeHtml(name) + '</h3>';
+    container.appendChild(canvas);
+
+    const actions = document.createElement('div');
+    actions.className = 'podium-card-actions';
+
+    const dlBtn = document.createElement('button');
+    dlBtn.className = 'podium-card-download';
+    dlBtn.textContent = '📥 Scarica immagine';
+    dlBtn.onclick = function() {
+        const link = document.createElement('a');
+        link.download = 'podio-' + name.toLowerCase().replace(/\s+/g, '-') + '-' + position + '.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    };
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'podium-card-close';
+    closeBtn.textContent = '✕ Chiudi';
+    closeBtn.onclick = function() { overlay.remove(); };
+
+    actions.appendChild(dlBtn);
+    actions.appendChild(closeBtn);
+    container.appendChild(actions);
+    overlay.appendChild(container);
+    document.body.appendChild(overlay);
+}
+
 </script>
 
 </body>
