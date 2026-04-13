@@ -2357,6 +2357,13 @@ function renderShiftInfoBar() {
 
     if (!shiftsData) return;
 
+    // Only show bar for the CURRENT week (not past/future weeks)
+    if (selectedWeek > 0 && weeksInMonth.length > 0) {
+        var _t = new Date(), _tMid = new Date(_t.getFullYear(), _t.getMonth(), _t.getDate());
+        var _sw = weeksInMonth[selectedWeek - 1];
+        if (!_sw || _tMid < _sw.start || _tMid > _sw.end) return;
+    }
+
     var absCount = Object.keys(todayAbsences).length;
     var presCount = Object.keys(todayPresences).length;
     var absList = Object.entries(todayAbsences).map(function(e) { return e[0] + ' (' + e[1] + ')'; }).join(', ');
@@ -2922,9 +2929,18 @@ function createOperatorCard(op, total) {
         card.addEventListener('click', () => openDetailsModal(op.colorId));
     }
 
-    // Absence / presence badge from shift data (ONLY in weekly view)
+    // Absence / presence badge from shift data (ONLY in current week view)
     var _absType = null, _presType = null, _shiftBadge = '';
-    if (chartsActiveTab === 'weekly') {
+    var _isCurrentWeek = false;
+    if (chartsActiveTab === 'weekly' && selectedWeek > 0) {
+        var _today = new Date();
+        var _todayMid = new Date(_today.getFullYear(), _today.getMonth(), _today.getDate());
+        var _sw = weeksInMonth[selectedWeek - 1];
+        if (_sw && _todayMid >= _sw.start && _todayMid <= _sw.end) {
+            _isCurrentWeek = true;
+        }
+    }
+    if (_isCurrentWeek) {
         _absType = todayAbsences[op.name] || null;
         _presType = (!_absType) ? (todayPresences[op.name] || null) : null;
         if (_absType) _shiftBadge = '<span class="absence-badge" title="' + _absType + '">' + _absType + '</span>';
