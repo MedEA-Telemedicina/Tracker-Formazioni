@@ -1571,7 +1571,203 @@ header select option { background: #ffffff; color: var(--text-primary); }
     font-size: 1rem !important;
 }
 
+
+/* ===== TURNI MICROSOFT TEAMS ===== */
+
+.absence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #fff5f5, #ffe0e0);
+    color: #c62828;
+    font-size: 0.6rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-left: auto;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(198, 40, 40, 0.2);
+    animation: pulseAbsence 2.5s ease-in-out infinite;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.absence-badge::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: #c62828;
+    border-radius: 50%;
+    flex-shrink: 0;
+    animation: pulseDot 2s ease-in-out infinite;
+}
+
+@keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.7); }
+}
+
+@keyframes pulseAbsence {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(198, 40, 40, 0.25); }
+    50% { box-shadow: 0 0 0 6px rgba(198, 40, 40, 0); }
+}
+
+.shift-upload-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 0.78rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition);
+    font-family: inherit;
+    position: relative;
+}
+
+.shift-upload-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+}
+
+.shift-upload-btn.loaded {
+    background: rgba(76, 175, 80, 0.15);
+    border-color: rgba(76, 175, 80, 0.35);
+}
+
+.shift-upload-btn .shift-btn-icon { font-size: 1rem; }
+
+.shift-upload-btn .shift-period {
+    font-size: 0.65rem;
+    opacity: 0.8;
+    font-weight: 400;
+}
+
+
+.refresh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-sm);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all var(--transition);
+    margin-right: 8px;
+}
+
+.refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.22);
+    border-color: rgba(255, 255, 255, 0.35);
+    transform: rotate(90deg);
+}
+
+.refresh-btn:active {
+    transform: rotate(180deg);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--text);
+    transition: background var(--transition);
+    white-space: nowrap;
+}
+
+.menu-item:hover {
+    background: rgba(66, 165, 245, 0.08);
+}
+
+.menu-item span:first-child {
+    font-size: 1rem;
+    width: 20px;
+    text-align: center;
+}
+
+.menu-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0;
+}
+
+
+.shift-info-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #e3f2fd, #e8f5e9);
+    border: 1px solid rgba(66, 165, 245, 0.25);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    margin-bottom: 16px;
+    font-size: 0.8rem;
+    color: #1565c0;
+    animation: fadeIn 0.3s ease;
+}
+
+.shift-info-bar .shift-info-icon { font-size: 1.1rem; }
+
+.shift-info-bar .shift-info-text { flex: 1; }
+
+.shift-info-bar .shift-info-text strong { font-weight: 600; }
+
+.shift-info-bar .shift-remove-btn {
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.shift-info-bar .shift-remove-btn:hover { color: #c62828; background: rgba(198,40,40,0.08); }
+
+/* Present badge (Mattina/Sera) - subtle */
+.presence-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: linear-gradient(135deg, #f0faf0, #e0f2e0);
+    color: #2e7d32;
+    font-size: 0.6rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-left: auto;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    border: 1px solid rgba(46, 125, 50, 0.15);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.presence-badge::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    background: #2e7d32;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
 </style>
+<!-- SheetJS for Excel parsing -->
+<script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1611,16 +1807,26 @@ header select option { background: #ffffff; color: var(--text-primary); }
         </div>
         <div class="header-right">
             <div class="header-menu-wrapper">
+                <button class="refresh-btn" id="refresh-btn" onclick="refreshData()" title="Aggiorna dati">
+                    🔄
+                </button>
                 <button class="header-menu-toggle" id="header-menu-toggle" onclick="toggleHeaderMenu()" title="Menu azioni">
                     <span></span><span></span><span></span>
                 </button>
                 <div class="header-menu-dropdown" id="header-menu-dropdown">
+                    <div class="menu-item shift-menu-item" onclick="openShiftUpload(); closeHeaderMenu();">
+                        <span>📅</span> Carica Turni Excel
+                    </div>
+                    <div class="menu-item shift-menu-item" id="remove-shifts-menu" onclick="removeShiftsData(); closeHeaderMenu();" style="display:none;">
+                        <span>🗑️</span> Rimuovi Turni
+                    </div>
+                    <div class="menu-divider"></div>
                     <select id="calendar-select" onchange="changeCalendar(this.value); closeHeaderMenu();" title="Seleziona calendario" style="display:none;">
                         <option>Caricamento...</option>
                     </select>
                     <button onclick="openChartsDrawer(); closeHeaderMenu();" title="Visualizza grafici">📊 Grafici</button>
                     <button onclick="openSearchModal(); closeHeaderMenu();" title="Cerca formazione per cliente">🔍 Cerca</button>
-                    <button onclick="refreshData(); closeHeaderMenu();" title="Aggiorna dati">🔄 Aggiorna</button>
+                    
                     <button onclick="exportCSV(); closeHeaderMenu();" title="Esporta in CSV">📥 CSV</button>
                     <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
                 </div>
@@ -1808,6 +2014,278 @@ const MESI = [
 ];
 
 // ============================================================
+// INTEGRAZIONE TURNI MICROSOFT TEAMS (via Excel)
+// ============================================================
+
+const SHIFT_LS_KEY = 'tracker_shifts_data';
+const SHIFT_LABELS_ABSENT = ['ferie', 'riposo', 'malattia', 'congedo parentale', 'non lavorativo'];
+const SHIFT_LABELS_PRESENT = ['mattina', 'sera'];
+
+let shiftsData = null;
+let todayAbsences = {};   // { 'FABIO CATALDI': 'FERIE', ... }
+let todayPresences = {};  // { 'FABIO CATALDI': 'MATTINA', ... }
+
+function initShiftsIntegration() {
+    var stored = localStorage.getItem(SHIFT_LS_KEY);
+    if (stored) {
+        try {
+            var data = JSON.parse(stored);
+            // Check if stored data is from today
+            var storedDate = data.shiftsData ? data.shiftsData.uploadedAt : null;
+            shiftsData = data.shiftsData || null;
+            todayAbsences = data.todayAbsences || {};
+            todayPresences = data.todayPresences || {};
+            updateShiftMenuLabel(true);
+        } catch (e) {
+            console.error('Errore caricamento turni:', e);
+            localStorage.removeItem(SHIFT_LS_KEY);
+        }
+    }
+}
+
+function openShiftUpload() {
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx,.xls';
+    input.onchange = function(e) {
+        var file = e.target.files[0];
+        if (file) parseShiftExcel(file);
+    };
+    input.click();
+}
+
+function parseShiftExcel(file) {
+    if (typeof XLSX === 'undefined') {
+        showError('Libreria Excel non caricata. Riprova tra qualche secondo.');
+        return;
+    }
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+
+            // Find "Pianificazione" sheet
+            var sheetName = null;
+            for (var s = 0; s < wb.SheetNames.length; s++) {
+                if (wb.SheetNames[s].toLowerCase().indexOf('pianificazione') >= 0) {
+                    sheetName = wb.SheetNames[s];
+                    break;
+                }
+            }
+            if (!sheetName) {
+                // Fallback: first sheet
+                sheetName = wb.SheetNames[0];
+            }
+
+            var ws = wb.Sheets[sheetName];
+            var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+            if (rows.length < 4) {
+                showError('Il file non contiene abbastanza righe.');
+                return;
+            }
+
+            // Row 0 = headers: ['', 'Posizione', 'Totale: ore retribuite', 'mer 1 apr', ...]
+            var headerRow = rows[0];
+
+            // Italian month abbreviations
+            var mesiAbbr = {
+                'gen': 0, 'feb': 1, 'mar': 2, 'apr': 3, 'mag': 4, 'giu': 5,
+                'lug': 6, 'ago': 7, 'set': 8, 'ott': 9, 'nov': 10, 'dic': 11
+            };
+
+            var today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            // Parse date header like "mer 1 apr" or "lun 13 apr"
+            function parseDateHeader(header) {
+                if (!header || typeof header !== 'string') return null;
+                var parts = header.trim().split(' ');
+                if (parts.length < 3) return null;
+                var day = parseInt(parts[1]);
+                var monthStr = parts[2].toLowerCase().substring(0, 3);
+                var month = mesiAbbr[monthStr];
+                if (isNaN(day) || month === undefined) return null;
+                return new Date(today.getFullYear(), month, day);
+            }
+
+            // Find today column
+            var todayColIdx = -1;
+            var periodStart = null;
+            var periodEnd = null;
+
+            for (var c = 3; c < headerRow.length; c++) {
+                var d = parseDateHeader(String(headerRow[c]));
+                if (!d) continue;
+                if (!periodStart || d < periodStart) periodStart = d;
+                if (!periodEnd || d > periodEnd) periodEnd = d;
+                if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth()) {
+                    todayColIdx = c;
+                }
+            }
+
+            if (todayColIdx === -1) {
+                showError('La data di oggi non \u00e8 presente nel file Excel caricato.\nAssicurati di caricare il file del mese corrente.');
+                return;
+            }
+
+            // Build absences and presences from operator rows (starting row index 3)
+            todayAbsences = {};
+            todayPresences = {};
+
+            var absenceTypes = ['ferie', 'riposo', 'malattia', 'permesso', 'assente', 'congedo'];
+            var workTypes = ['mattina', 'sera', 'notte', 'giornata'];
+
+            for (var r = 3; r < rows.length; r++) {
+                var row = rows[r];
+                var rawName = String(row[0] || '').trim();
+                if (!rawName) continue;
+                if (rawName.toLowerCase() === 'note del giorno' || rawName.toLowerCase().indexOf('totale') === 0) continue;
+
+                var cellValue = String(row[todayColIdx] || '').trim();
+                if (!cellValue) continue;
+
+                var opName = matchTeamsToOperator(rawName);
+                if (!opName) continue;
+
+                var cellLower = cellValue.toLowerCase();
+                var isAbsent = false;
+                for (var a = 0; a < absenceTypes.length; a++) {
+                    if (cellLower.indexOf(absenceTypes[a]) >= 0) { isAbsent = true; break; }
+                }
+                var isWorking = false;
+                for (var w = 0; w < workTypes.length; w++) {
+                    if (cellLower.indexOf(workTypes[w]) >= 0) { isWorking = true; break; }
+                }
+
+                if (isAbsent) {
+                    todayAbsences[opName] = cellValue.toUpperCase();
+                } else if (isWorking) {
+                    todayPresences[opName] = cellValue.toUpperCase();
+                }
+            }
+
+            // Format period
+            function fmtDate(dt) { return dt ? dt.getDate() + '/' + (dt.getMonth()+1) + '/' + dt.getFullYear() : ''; }
+
+            shiftsData = {
+                dayLabel: String(headerRow[todayColIdx]),
+                period: fmtDate(periodStart) + ' - ' + fmtDate(periodEnd),
+                uploadedAt: new Date().toISOString(),
+                fileName: file.name
+            };
+
+            localStorage.setItem(SHIFT_LS_KEY, JSON.stringify({
+                shiftsData: shiftsData,
+                todayAbsences: todayAbsences,
+                todayPresences: todayPresences
+            }));
+
+            updateShiftMenuLabel(true);
+            refreshAbsenceIndicators();
+            renderShiftInfoBar();
+
+            var totalOps = Object.keys(todayAbsences).length + Object.keys(todayPresences).length;
+            console.log('Turni caricati:', totalOps, 'operatori per', headerRow[todayColIdx]);
+
+        } catch (err) {
+            console.error('Errore parsing Excel:', err);
+            showError('Errore nella lettura del file Excel: ' + err.message);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function updateShiftMenuLabel(loaded) {
+    var removeBtn = document.getElementById('remove-shifts-menu');
+    if (removeBtn) removeBtn.style.display = loaded ? '' : 'none';
+}
+
+function refreshAbsenceIndicators() {
+    // Remove existing badges
+    document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
+
+    // Add badges to matching cards
+    document.querySelectorAll('.operator-card').forEach(function(card) {
+        var nameEl = card.querySelector('.card-title h3');
+        if (!nameEl) return;
+        var name = nameEl.textContent.trim();
+
+        var absenceType = todayAbsences[name];
+        var presenceType = todayPresences[name];
+
+        if (absenceType) {
+            var badge = document.createElement('span');
+            badge.className = 'absence-badge';
+            badge.title = absenceType;
+            badge.textContent = absenceType;
+            var header = card.querySelector('.card-header');
+            if (header) header.appendChild(badge);
+        } else if (presenceType) {
+            var pBadge = document.createElement('span');
+            pBadge.className = 'presence-badge';
+            pBadge.title = 'Turno: ' + presenceType;
+            pBadge.textContent = presenceType;
+            var pHeader = card.querySelector('.card-header');
+            if (pHeader) pHeader.appendChild(pBadge);
+        }
+    });
+}
+
+function renderShiftInfoBar() {
+    var existing = document.getElementById('shift-info-bar');
+    if (existing) existing.remove();
+
+    if (!shiftsData) return;
+
+    var absCount = Object.keys(todayAbsences).length;
+    var presCount = Object.keys(todayPresences).length;
+    var absList = Object.entries(todayAbsences).map(function(e) { return e[0] + ' (' + e[1] + ')'; }).join(', ');
+
+    var bar = document.createElement('div');
+    bar.className = 'shift-info-bar';
+    bar.id = 'shift-info-bar';
+
+    var todayStr = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
+    todayStr = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
+
+    var html = '<span class="shift-info-icon">📅</span>';
+    html += '<span class="shift-info-text">';
+    html += '<strong>Turni ' + todayStr + ':</strong> ';
+    if (absCount > 0) {
+        html += '<span style="color:#c62828">' + absCount + ' assent' + (absCount === 1 ? 'e' : 'i') + '</span>';
+        html += ' — ' + absList;
+    } else {
+        html += '<span style="color:#2e7d32">Tutti presenti ✓</span>';
+    }
+    if (presCount > 0) {
+        html += ' · ' + presCount + ' in turno';
+    }
+    html += '</span>';
+    html += '<button class="shift-remove-btn" onclick="removeShiftsData()" title="Rimuovi pianificazione">✕</button>';
+    bar.innerHTML = html;
+
+    // Insert before the operators grid or the first content area
+    var grid = document.getElementById('operators-grid');
+    if (grid && grid.parentNode) {
+        grid.parentNode.insertBefore(bar, grid);
+    }
+}
+
+function removeShiftsData() {
+    localStorage.removeItem(SHIFT_LS_KEY);
+    shiftsData = null;
+    todayAbsences = {};
+    todayPresences = {};
+    updateShiftMenuLabel(false);
+    refreshAbsenceIndicators();
+    var bar = document.getElementById('shift-info-bar');
+    if (bar) bar.remove();
+}
+
+
+
+// ============================================================
 // STATO APPLICAZIONE
 // ============================================================
 
@@ -1925,6 +2403,7 @@ function showLoginScreen() {
 async function onLoginSuccess() {
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('app').style.display = 'block';
+    initShiftsIntegration();
     try {
         await loadCalendars();
         await loadEvents();
@@ -2299,6 +2778,9 @@ function renderDashboard(data, grandTotal) {
 
     grid.style.display = 'grid';
     sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, grandTotal)));
+
+    // Refresh shift info bar if shifts are loaded
+    if (shiftsData) { renderShiftInfoBar(); }
 }
 
 function createOperatorCard(op, total) {
@@ -2312,13 +2794,22 @@ function createOperatorCard(op, total) {
         card.addEventListener('click', () => openDetailsModal(op.colorId));
     }
 
+    // Absence / presence badge from shift data
+    var _absType = todayAbsences[op.name] || null;
+    var _presType = (!_absType) ? (todayPresences[op.name] || null) : null;
+    var _shiftBadge = '';
+    if (_absType) _shiftBadge = '<span class="absence-badge" title="' + _absType + '">' + _absType + '</span>';
+    else if (_presType) _shiftBadge = '<span class="presence-badge" title="Turno: ' + _presType + '">' + _presType + '</span>';
+
     card.innerHTML =
         '<div class="card-header">'
         + '<span class="color-dot" style="background:' + op.hex + '"></span>'
         + '<div class="card-title">'
         + '<h3>' + escapeHtml(op.name) + '</h3>'
         + '<span class="color-name">' + op.colorName + '</span>'
-        + '</div></div>'
+        + '</div>'
+        + _shiftBadge
+        + '</div>'
         + '<div class="card-body">'
         + '<div class="formation-count" style="color:' + op.hex + '">' + op.formations + '</div>'
         + '<div class="formation-label">dispositivi</div>'
@@ -2882,9 +3373,11 @@ function renderWeeklyChart() {
         const data = weeks.map(w => {
             const evts = allMonthEvents.filter(ev => {
                 if (!ev.start) return false;
-                const s = ev.start.dateTime ? new Date(ev.start.dateTime)
-                        : ev.start.date    ? new Date(ev.start.date) : null;
-                if (!s) return false;
+                // Escludi eventi tutto il giorno (solo start.date, senza dateTime)
+                if (!ev.start.dateTime) return false;
+                // Escludi eventi cancellati
+                if (ev.status === 'cancelled') return false;
+                const s = new Date(ev.start.dateTime);
                 return s >= w.start && s <= w.end && resolveColorId(ev) === op.colorId;
             });
             return evts.reduce((sum, ev) => {
