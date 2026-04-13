@@ -1768,6 +1768,11 @@ header select option { background: #ffffff; color: var(--text-primary); }
 </style>
 <!-- SheetJS for Excel parsing -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
 </head>
 <body>
 
@@ -2017,30 +2022,112 @@ const MESI = [
 // INTEGRAZIONE TURNI MICROSOFT TEAMS (via Excel)
 // ============================================================
 
+// ============================================================
+// FIREBASE CONFIGURATION
+// ============================================================
+
+const firebaseConfig = {
+    apiKey: "AIzaSyC5g1aXZHtQPmoYhmjUnPqedb4ATeamypo",
+    authDomain: "tracker-formazioni-8a28e.firebaseapp.com",
+    databaseURL: "https://tracker-formazioni-8a28e-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "tracker-formazioni-8a28e",
+    storageBucket: "tracker-formazioni-8a28e.firebasestorage.app",
+    messagingSenderId: "1068667927814",
+    appId: "1:1068667927814:web:5b2f8901aa7f2c534d7287"
+};
+
+const firebaseApp = firebase.initializeApp(firebaseConfig);
+const firebaseDb = firebase.database();
+
+// ============================================================
+// INTEGRAZIONE TURNI (Firebase + Excel)
+// ============================================================
+
 const SHIFT_LS_KEY = 'tracker_shifts_data';
-const SHIFT_LABELS_ABSENT = ['ferie', 'riposo', 'malattia', 'congedo parentale', 'non lavorativo'];
-const SHIFT_LABELS_PRESENT = ['mattina', 'sera'];
+const SHIFT_LABELS_ABSENT = ['ferie', 'riposo', 'malattia', 'congedo parentale', 'non lavorativo', 'permesso', 'assente', 'congedo'];
+const SHIFT_LABELS_PRESENT = ['mattina', 'sera', 'notte', 'giornata'];
 
 let shiftsData = null;
-let todayAbsences = {};   // { 'FABIO CATALDI': 'FERIE', ... }
-let todayPresences = {};  // { 'FABIO CATALDI': 'MATTINA', ... }
+let allShiftsMap = {};        // { 'FABIO CATALDI': { '2026-04-01': 'Sera', ... }, ... }
+let todayAbsences = {};       // { 'FABIO CATALDI': 'FERIE', ... }
+let todayPresences = {};      // { 'FABIO CATALDI': 'MATTINA', ... }
 
+function buildTodayFromAllShifts() {
+    todayAbsences = {};
+    todayPresences = {};
+
+    var today = new Date();
+    // Build date key in format YYYY-MM-DD
+    var dateKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
+
+    var operators = Object.keys(allShiftsMap);
+    for (var i = 0; i < operators.length; i++) {
+        var opName = operators[i];
+        var dayData = allShiftsMap[opName];
+        if (!dayData || !dayData[dateKey]) continue;
+
+        var cellValue = dayData[dateKey];
+        var cellLower = cellValue.toLowerCase();
+
+        var isAbsent = false;
+        for (var a = 0; a < SHIFT_LABELS_ABSENT.length; a++) {
+            if (cellLower.indexOf(SHIFT_LABELS_ABSENT[a]) >= 0) { isAbsent = true; break; }
+        }
+        var isWorking = false;
+        for (var w = 0; w < SHIFT_LABELS_PRESENT.length; w++) {
+            if (cellLower.indexOf(SHIFT_LABELS_PRESENT[w]) >= 0) { isWorking = true; break; }
+        }
+
+        if (isAbsent) {
+            todayAbsences[opName] = cellValue.toUpperCase();
+        } else if (isWorking) {
+            todayPresences[opName] = cellValue.toUpperCase();
+        }
+    }
+}
+
+// Load shifts from Firebase on startup
 function initShiftsIntegration() {
+    // First try localStorage as cache for instant display
     var stored = localStorage.getItem(SHIFT_LS_KEY);
     if (stored) {
         try {
             var data = JSON.parse(stored);
-            // Check if stored data is from today
-            var storedDate = data.shiftsData ? data.shiftsData.uploadedAt : null;
             shiftsData = data.shiftsData || null;
-            todayAbsences = data.todayAbsences || {};
-            todayPresences = data.todayPresences || {};
+            allShiftsMap = data.allShiftsMap || {};
+            buildTodayFromAllShifts();
             updateShiftMenuLabel(true);
         } catch (e) {
-            console.error('Errore caricamento turni:', e);
             localStorage.removeItem(SHIFT_LS_KEY);
         }
     }
+
+    // Then sync from Firebase (authoritative source)
+    firebaseDb.ref('shifts').once('value').then(function(snapshot) {
+        var fbData = snapshot.val();
+        if (fbData && fbData.operators) {
+            allShiftsMap = fbData.operators;
+            shiftsData = fbData.meta || null;
+            buildTodayFromAllShifts();
+
+            // Update localStorage cache
+            localStorage.setItem(SHIFT_LS_KEY, JSON.stringify({
+                shiftsData: shiftsData,
+                allShiftsMap: allShiftsMap
+            }));
+
+            updateShiftMenuLabel(true);
+            if (typeof renderDashboard === 'function' && currentData) {
+                renderDashboard(currentData);
+            }
+            console.log('Turni caricati da Firebase:', Object.keys(allShiftsMap).length, 'operatori');
+        } else if (!stored) {
+            // No data anywhere
+            updateShiftMenuLabel(false);
+        }
+    }).catch(function(err) {
+        console.warn('Firebase non raggiungibile, uso cache locale:', err.message);
+    });
 }
 
 function openShiftUpload() {
@@ -2053,7 +2140,6 @@ function openShiftUpload() {
     };
     input.click();
 }
-
 
 function matchTeamsToOperator(teamsName) {
     var needle = teamsName.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e')
@@ -2094,7 +2180,7 @@ function parseShiftExcel(file) {
         try {
             var wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
 
-            // Find "Pianificazione" sheet
+            // Find "Pianificazione" sheet or fallback to first
             var sheetName = null;
             for (var s = 0; s < wb.SheetNames.length; s++) {
                 if (wb.SheetNames[s].toLowerCase().indexOf('pianificazione') >= 0) {
@@ -2102,10 +2188,7 @@ function parseShiftExcel(file) {
                     break;
                 }
             }
-            if (!sheetName) {
-                // Fallback: first sheet
-                sheetName = wb.SheetNames[0];
-            }
+            if (!sheetName) sheetName = wb.SheetNames[0];
 
             var ws = wb.Sheets[sheetName];
             var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
@@ -2115,7 +2198,6 @@ function parseShiftExcel(file) {
                 return;
             }
 
-            // Row 0 = headers: ['', 'Posizione', 'Totale: ore retribuite', 'mer 1 apr', ...]
             var headerRow = rows[0];
 
             // Italian month abbreviations
@@ -2125,7 +2207,7 @@ function parseShiftExcel(file) {
             };
 
             var today = new Date();
-            today.setHours(0, 0, 0, 0);
+            var currentYear = today.getFullYear();
 
             // Parse date header like "mer 1 apr" or "lun 13 apr"
             function parseDateHeader(header) {
@@ -2136,17 +2218,20 @@ function parseShiftExcel(file) {
                 var monthStr = parts[2].toLowerCase().substring(0, 3);
                 var month = mesiAbbr[monthStr];
                 if (isNaN(day) || month === undefined) return null;
-                return new Date(today.getFullYear(), month, day);
+                return new Date(currentYear, month, day);
             }
 
-            // Find today column
-            var todayColIdx = -1;
+            // Build column -> date mapping for ALL columns
+            var colDateMap = {};   // colIdx -> "YYYY-MM-DD"
             var periodStart = null;
             var periodEnd = null;
+            var todayColIdx = -1;
 
             for (var c = 3; c < headerRow.length; c++) {
                 var d = parseDateHeader(String(headerRow[c]));
                 if (!d) continue;
+                var dateKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                colDateMap[c] = dateKey;
                 if (!periodStart || d < periodStart) periodStart = d;
                 if (!periodEnd || d > periodEnd) periodEnd = d;
                 if (d.getDate() === today.getDate() && d.getMonth() === today.getMonth()) {
@@ -2154,17 +2239,9 @@ function parseShiftExcel(file) {
                 }
             }
 
-            if (todayColIdx === -1) {
-                showError('La data di oggi non \u00e8 presente nel file Excel caricato.\nAssicurati di caricare il file del mese corrente.');
-                return;
-            }
-
-            // Build absences and presences from operator rows (starting row index 3)
-            todayAbsences = {};
-            todayPresences = {};
-
-            var absenceTypes = ['ferie', 'riposo', 'malattia', 'permesso', 'assente', 'congedo'];
-            var workTypes = ['mattina', 'sera', 'notte', 'giornata'];
+            // Build allShiftsMap for ALL days, ALL operators
+            allShiftsMap = {};
+            var matchedOps = 0;
 
             for (var r = 3; r < rows.length; r++) {
                 var row = rows[r];
@@ -2172,51 +2249,63 @@ function parseShiftExcel(file) {
                 if (!rawName) continue;
                 if (rawName.toLowerCase() === 'note del giorno' || rawName.toLowerCase().indexOf('totale') === 0) continue;
 
-                var cellValue = String(row[todayColIdx] || '').trim();
-                if (!cellValue) continue;
-
                 var opName = matchTeamsToOperator(rawName);
                 if (!opName) continue;
+                matchedOps++;
 
-                var cellLower = cellValue.toLowerCase();
-                var isAbsent = false;
-                for (var a = 0; a < absenceTypes.length; a++) {
-                    if (cellLower.indexOf(absenceTypes[a]) >= 0) { isAbsent = true; break; }
-                }
-                var isWorking = false;
-                for (var w = 0; w < workTypes.length; w++) {
-                    if (cellLower.indexOf(workTypes[w]) >= 0) { isWorking = true; break; }
-                }
-
-                if (isAbsent) {
-                    todayAbsences[opName] = cellValue.toUpperCase();
-                } else if (isWorking) {
-                    todayPresences[opName] = cellValue.toUpperCase();
+                allShiftsMap[opName] = {};
+                var colIndices = Object.keys(colDateMap);
+                for (var ci = 0; ci < colIndices.length; ci++) {
+                    var colIdx = parseInt(colIndices[ci]);
+                    var cellValue = String(row[colIdx] || '').trim();
+                    if (cellValue) {
+                        allShiftsMap[opName][colDateMap[colIdx]] = cellValue;
+                    }
                 }
             }
 
-            // Format period
+            // Rebuild today's data
+            buildTodayFromAllShifts();
+
             function fmtDate(dt) { return dt ? dt.getDate() + '/' + (dt.getMonth()+1) + '/' + dt.getFullYear() : ''; }
 
             shiftsData = {
-                dayLabel: String(headerRow[todayColIdx]),
+                dayLabel: todayColIdx >= 0 ? String(headerRow[todayColIdx]) : 'N/A',
                 period: fmtDate(periodStart) + ' - ' + fmtDate(periodEnd),
                 uploadedAt: new Date().toISOString(),
                 fileName: file.name
             };
 
+            // Save to Firebase (authoritative)
+            firebaseDb.ref('shifts').set({
+                operators: allShiftsMap,
+                meta: shiftsData
+            }).then(function() {
+                console.log('Turni salvati su Firebase:', matchedOps, 'operatori');
+            }).catch(function(err) {
+                console.warn('Errore salvataggio Firebase:', err.message);
+            });
+
+            // Also save to localStorage (cache)
             localStorage.setItem(SHIFT_LS_KEY, JSON.stringify({
                 shiftsData: shiftsData,
-                todayAbsences: todayAbsences,
-                todayPresences: todayPresences
+                allShiftsMap: allShiftsMap
             }));
 
             updateShiftMenuLabel(true);
-            refreshAbsenceIndicators();
-            renderShiftInfoBar();
+            if (typeof renderDashboard === 'function' && currentData) {
+                renderDashboard(currentData);
+            }
+            if (chartsActiveTab === 'weekly') {
+                renderShiftInfoBar();
+            }
 
-            var totalOps = Object.keys(todayAbsences).length + Object.keys(todayPresences).length;
-            console.log('Turni caricati:', totalOps, 'operatori per', headerRow[todayColIdx]);
+            var totalMatched = Object.keys(todayAbsences).length + Object.keys(todayPresences).length;
+            if (todayColIdx === -1) {
+                showError('Turni caricati per il periodo, ma la data di oggi non \u00e8 presente nel file.\nI turni saranno visibili nei giorni coperti dal file.');
+            } else {
+                console.log('Turni caricati:', totalMatched, 'operatori per', headerRow[todayColIdx]);
+            }
 
         } catch (err) {
             console.error('Errore parsing Excel:', err);
@@ -2232,10 +2321,10 @@ function updateShiftMenuLabel(loaded) {
 }
 
 function refreshAbsenceIndicators() {
-    // Remove existing badges
     document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
 
-    // Add badges to matching cards
+    if (chartsActiveTab !== 'weekly') return;
+
     document.querySelectorAll('.operator-card').forEach(function(card) {
         var nameEl = card.querySelector('.card-title h3');
         if (!nameEl) return;
@@ -2279,23 +2368,22 @@ function renderShiftInfoBar() {
     var todayStr = new Date().toLocaleDateString('it-IT', { weekday: 'long', day: 'numeric', month: 'long' });
     todayStr = todayStr.charAt(0).toUpperCase() + todayStr.slice(1);
 
-    var html = '<span class="shift-info-icon">📅</span>';
+    var html = '<span class="shift-info-icon">\ud83d\udcc5</span>';
     html += '<span class="shift-info-text">';
     html += '<strong>Turni ' + todayStr + ':</strong> ';
     if (absCount > 0) {
         html += '<span style="color:#c62828">' + absCount + ' assent' + (absCount === 1 ? 'e' : 'i') + '</span>';
-        html += ' — ' + absList;
+        html += ' \u2014 ' + absList;
     } else {
-        html += '<span style="color:#2e7d32">Tutti presenti ✓</span>';
+        html += '<span style="color:#2e7d32">Tutti presenti \u2713</span>';
     }
     if (presCount > 0) {
-        html += ' · ' + presCount + ' in turno';
+        html += ' \u00b7 ' + presCount + ' in turno';
     }
     html += '</span>';
-    html += '<button class="shift-remove-btn" onclick="removeShiftsData()" title="Rimuovi pianificazione">✕</button>';
+    html += '<button class="shift-remove-btn" onclick="removeShiftsData()" title="Rimuovi pianificazione">\u2715</button>';
     bar.innerHTML = html;
 
-    // Insert before the operators grid or the first content area
     var grid = document.getElementById('operators-grid');
     if (grid && grid.parentNode) {
         grid.parentNode.insertBefore(bar, grid);
@@ -2303,17 +2391,27 @@ function renderShiftInfoBar() {
 }
 
 function removeShiftsData() {
+    // Remove from Firebase
+    firebaseDb.ref('shifts').remove().then(function() {
+        console.log('Turni rimossi da Firebase');
+    }).catch(function(err) {
+        console.warn('Errore rimozione Firebase:', err.message);
+    });
+
+    // Remove local
     localStorage.removeItem(SHIFT_LS_KEY);
     shiftsData = null;
+    allShiftsMap = {};
     todayAbsences = {};
     todayPresences = {};
     updateShiftMenuLabel(false);
     refreshAbsenceIndicators();
     var bar = document.getElementById('shift-info-bar');
     if (bar) bar.remove();
+    if (typeof renderDashboard === 'function' && currentData) {
+        renderDashboard(currentData);
+    }
 }
-
-
 
 // ============================================================
 // STATO APPLICAZIONE
@@ -2810,7 +2908,7 @@ function renderDashboard(data, grandTotal) {
     sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, grandTotal)));
 
     // Refresh shift info bar if shifts are loaded
-    if (shiftsData) { renderShiftInfoBar(); }
+    if (shiftsData && chartsActiveTab === 'weekly') { renderShiftInfoBar(); } else { var _bar = document.getElementById('shift-info-bar'); if (_bar) _bar.remove(); }
 }
 
 function createOperatorCard(op, total) {
@@ -2824,12 +2922,14 @@ function createOperatorCard(op, total) {
         card.addEventListener('click', () => openDetailsModal(op.colorId));
     }
 
-    // Absence / presence badge from shift data
-    var _absType = todayAbsences[op.name] || null;
-    var _presType = (!_absType) ? (todayPresences[op.name] || null) : null;
-    var _shiftBadge = '';
-    if (_absType) _shiftBadge = '<span class="absence-badge" title="' + _absType + '">' + _absType + '</span>';
-    else if (_presType) _shiftBadge = '<span class="presence-badge" title="Turno: ' + _presType + '">' + _presType + '</span>';
+    // Absence / presence badge from shift data (ONLY in weekly view)
+    var _absType = null, _presType = null, _shiftBadge = '';
+    if (chartsActiveTab === 'weekly') {
+        _absType = todayAbsences[op.name] || null;
+        _presType = (!_absType) ? (todayPresences[op.name] || null) : null;
+        if (_absType) _shiftBadge = '<span class="absence-badge" title="' + _absType + '">' + _absType + '</span>';
+        else if (_presType) _shiftBadge = '<span class="presence-badge" title="Turno: ' + _presType + '">' + _presType + '</span>';
+    }
 
     card.innerHTML =
         '<div class="card-header">'
@@ -3357,6 +3457,12 @@ function switchChartTab(tab, force) {
     if (tab === 'monthly') renderMonthlyChart();
     if (tab === 'annual')  renderAnnualChart();
     if (tab === 'ranking') renderRankingView();
+
+    // Show/hide shift info bar based on tab
+    var _sbar = document.getElementById('shift-info-bar');
+    if (tab !== 'weekly' && _sbar) _sbar.style.display = 'none';
+    else if (tab === 'weekly' && _sbar) _sbar.style.display = '';
+    else if (tab === 'weekly' && shiftsData) renderShiftInfoBar();
 }
 
 function chartsChangeYear(delta) {
