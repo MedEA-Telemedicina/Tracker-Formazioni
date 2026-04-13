@@ -1813,10 +1813,9 @@ header select option { background: #ffffff; color: var(--text-primary); }
 
 /* === DA ASSOCIARE - SCROLL TO TODAY & ASSIGN === */
 .da-modal-today-btn {
-    position: sticky;
-    bottom: 16px;
-    left: 50%;
-    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 6px;
     z-index: 100;
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: #fff;
@@ -2588,15 +2587,14 @@ function renderShiftInfoBar() {
     html += '<strong>Turni ' + todayStr + ':</strong> ';
     if (absCount > 0) {
         html += '<span style="color:#c62828">' + absCount + ' assent' + (absCount === 1 ? 'e' : 'i') + '</span>';
-        html += ' \u2014 ' + absList;
     } else {
         html += '<span style="color:#2e7d32">Tutti presenti \u2713</span>';
     }
     if (presCount > 0) {
-        html += ' \u00b7 ' + presCount + ' in turno';
+        html += ' · ' + presCount + ' in turno';
     }
     html += '</span>';
-    html += '<button class="shift-remove-btn" onclick="removeShiftsData()" title="Rimuovi pianificazione">\u2715</button>';
+    // X button removed — use menu to clear shifts
     bar.innerHTML = html;
 
     var grid = document.getElementById('operators-grid');
@@ -3089,7 +3087,13 @@ function renderDashboard(data, grandTotal) {
     const pavoneMonthOp = (typeof currentData !== 'undefined' && currentData)
         ? currentData.operators['7']
         : data.operators['7'];
-    const daAssociareCount = pavoneMonthOp ? pavoneMonthOp.eventCount : 0;
+    // Da Associare count: weekly when a week is selected, monthly otherwise
+    let daAssociareCount = 0;
+    if (selectedWeek > 0 && filteredData && filteredData.operators['7']) {
+        daAssociareCount = filteredData.operators['7'].eventCount;
+    } else {
+        daAssociareCount = pavoneMonthOp ? pavoneMonthOp.eventCount : 0;
+    }
     document.getElementById('da-associare-count').textContent = daAssociareCount;
 
     const grid = document.getElementById('operators-grid');
@@ -3325,42 +3329,65 @@ function renderSearchResults(events, query) {
 
 function openDaAssociareModal() {
     openDetailsModal('7');
-    // Scroll to today after modal opens
-    requestAnimationFrame(() => {
-        const todayHeader = document.querySelector('.modal-day-header.today-header');
+    // Scroll to today after modal fully renders
+    setTimeout(() => {
         const listEl = document.getElementById('modal-events-list');
+        const todayHeader = listEl ? listEl.querySelector('.modal-day-header.today-header') : null;
         if (todayHeader && listEl) {
-            todayHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            // Scroll the list container so today is visible
+            const listTop = listEl.getBoundingClientRect().top;
+            const headerTop = todayHeader.getBoundingClientRect().top;
+            listEl.scrollTop = listEl.scrollTop + (headerTop - listTop) - 8;
         }
         setupDaAssociareTodayBtn(listEl);
-    });
+    }, 250);
 }
 
 function setupDaAssociareTodayBtn(listEl) {
     if (!listEl) return;
-    let btn = document.getElementById('da-oggi-btn');
-    if (!btn) {
-        btn = document.createElement('button');
-        btn.id = 'da-oggi-btn';
-        btn.className = 'da-modal-today-btn';
-        btn.textContent = '📍 Oggi';
-        btn.onclick = function() {
-            const hdr = document.querySelector('.modal-day-header.today-header');
-            if (hdr) hdr.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        };
-        listEl.parentElement.appendChild(btn);
-    }
-    // Show/hide based on scroll
-    const checkScroll = () => {
-        const hdr = document.querySelector('.modal-day-header.today-header');
-        if (!hdr || !btn) return;
-        const rect = hdr.getBoundingClientRect();
-        const listRect = listEl.getBoundingClientRect();
-        const isVisible = rect.top >= listRect.top - 50 && rect.bottom <= listRect.bottom + 50;
-        btn.style.display = isVisible ? 'none' : 'block';
+    const todayHdr = listEl.querySelector('.modal-day-header.today-header');
+    if (!todayHdr) return; // No events today — no button needed
+
+    // Remove old button if exists
+    var oldBtn = document.getElementById('da-oggi-btn');
+    if (oldBtn) oldBtn.remove();
+
+    // Create floating button inside the modal (not inside listEl so sticky works)
+    var btn = document.createElement('button');
+    btn.id = 'da-oggi-btn';
+    btn.className = 'da-modal-today-btn';
+    btn.textContent = '📍 Oggi';
+    btn.onclick = function() {
+        var hdr = listEl.querySelector('.modal-day-header.today-header');
+        if (hdr) {
+            var listTop = listEl.getBoundingClientRect().top;
+            var hdrTop = hdr.getBoundingClientRect().top;
+            listEl.scrollTo({ top: listEl.scrollTop + (hdrTop - listTop) - 8, behavior: 'smooth' });
+        }
     };
+
+    // Place button inside the modal-content, positioned over the list
+    var modalContent = listEl.closest('.modal-content') || listEl.parentElement;
+    modalContent.style.position = 'relative';
+    btn.style.position = 'absolute';
+    btn.style.bottom = '20px';
+    btn.style.left = '50%';
+    btn.style.transform = 'translateX(-50%)';
+    btn.style.zIndex = '100';
+    modalContent.appendChild(btn);
+
+    // Show/hide based on whether today header is visible in the list
+    function checkScroll() {
+        var hdr = listEl.querySelector('.modal-day-header.today-header');
+        if (!hdr || !btn) return;
+        var rect = hdr.getBoundingClientRect();
+        var listRect = listEl.getBoundingClientRect();
+        var isVisible = rect.top >= listRect.top - 60 && rect.bottom <= listRect.bottom + 60;
+        btn.style.display = isVisible ? 'none' : 'flex';
+    }
     listEl.addEventListener('scroll', checkScroll);
-    checkScroll();
+    // Initial check — if already scrolled to today, hide the button
+    setTimeout(checkScroll, 300);
 }
 
 // Assign event to operator
