@@ -1720,7 +1720,11 @@ function renderDashboard(data, grandTotal) {
     });
 
     // Calcola totalEvents escludendo Pavone per il messaggio "nessuna formazione"
-    const gridEvents = data.totalEvents - (pavoneMonthOp ? pavoneMonthOp.eventCount : 0);
+    // IMPORTANTE: usa il conteggio Pavone del periodo filtrato (data), NON del mese intero (currentData).
+    // Usare currentData causava bug: se ci sono eventi Pavone in altre settimane ma non in quella
+    // selezionata, la sottrazione dava 0 e le card degli operatori sparivano.
+    const filteredPavoneOp = data.operators['7'];
+    const gridEvents = data.totalEvents - (filteredPavoneOp ? filteredPavoneOp.eventCount : 0);
 
     if (gridEvents === 0 && daAssociareCount > 0) {
         const label = selectedWeek === 0
