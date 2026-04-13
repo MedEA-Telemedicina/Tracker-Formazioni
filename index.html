@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📋</text></svg>">
 
 <style>
@@ -1106,6 +1107,45 @@ header select option { background: #ffffff; color: var(--text-primary); }
 }
 
 /* ============================================================
+   CHARTS DRAWER
+   ============================================================ */
+
+#charts-drawer.open {
+    display: flex !important;
+    animation: slideInRight 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes slideInRight {
+    from { transform: translateX(100%); opacity: 0.5; }
+    to   { transform: translateX(0);   opacity: 1;   }
+}
+
+.chart-tab {
+    flex: 1;
+    padding: 0.7rem 0.5rem;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chart-tab:hover {
+    color: var(--text-primary);
+    background: rgba(0,0,0,0.03);
+}
+
+.chart-tab.active {
+    color: #4285f4;
+    border-bottom-color: #4285f4;
+    font-weight: 600;
+}
+
+/* ============================================================
    PRINT STYLES
    ============================================================ */
 
@@ -1160,6 +1200,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
             <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario" style="display:none;">
                 <option>Caricamento...</option>
             </select>
+            <button onclick="openChartsDrawer()" title="Visualizza grafici">📊 Grafici</button>
             <button onclick="openSearchModal()" title="Cerca formazione per cliente">🔍 Cerca</button>
             <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
             <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
@@ -1206,6 +1247,40 @@ header select option { background: #ffffff; color: var(--text-primary); }
 
     <!-- Operators Grid -->
     <div id="operators-grid"></div>
+
+
+    <!-- ============================================================ -->
+    <!-- CHARTS DRAWER                                                 -->
+    <!-- ============================================================ -->
+    <div id="charts-overlay" onclick="closeChartsDrawer(event)" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:2000;"></div>
+    <div id="charts-drawer" style="display:none;position:fixed;top:0;right:0;height:100%;width:min(560px,100vw);background:var(--card-bg);z-index:2001;flex-direction:column;box-shadow:-4px 0 30px rgba(0,0,0,0.15);overflow:hidden;">
+        <!-- Drawer Header -->
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <span style="font-size:1.15rem;font-weight:700;color:var(--text-primary);">📊 Grafici</span>
+            <button onclick="closeChartsDrawer(null)" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-secondary);line-height:1;" title="Chiudi">✕</button>
+        </div>
+        <!-- Drawer Tabs -->
+        <div id="charts-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <button class="chart-tab active" data-tab="weekly"  onclick="switchChartTab('weekly')">📅 Settimanale</button>
+            <button class="chart-tab"        data-tab="monthly" onclick="switchChartTab('monthly')">📆 Mensile</button>
+            <button class="chart-tab"        data-tab="annual"  onclick="switchChartTab('annual')">📈 Annuale</button>
+        </div>
+        <!-- Year nav for monthly/annual -->
+        <div id="charts-year-nav" style="display:none;align-items:center;justify-content:center;gap:1rem;padding:0.6rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;">
+            <button onclick="chartsChangeYear(-1)" style="background:none;border:1px solid var(--border);border-radius:6px;padding:0.25rem 0.75rem;cursor:pointer;font-size:1rem;">◀</button>
+            <span id="charts-year-label" style="font-weight:600;min-width:60px;text-align:center;"></span>
+            <button onclick="chartsChangeYear(1)"  style="background:none;border:1px solid var(--border);border-radius:6px;padding:0.25rem 0.75rem;cursor:pointer;font-size:1rem;">▶</button>
+        </div>
+        <!-- Chart area -->
+        <div id="charts-content" style="flex:1;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:1rem;">
+            <div id="charts-loader" style="display:none;flex-direction:column;align-items:center;justify-content:center;padding:3rem;gap:1rem;">
+                <div class="spinner"></div>
+                <p style="color:var(--text-secondary);">Caricamento dati...</p>
+            </div>
+            <canvas id="chart-main"  style="display:none;max-height:340px;"></canvas>
+            <canvas id="chart-extra" style="display:none;max-height:260px;"></canvas>
+        </div>
+    </div>
 
 </div>
 
@@ -2240,6 +2315,340 @@ function showError(message) {
     document.body.appendChild(toast);
     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 6000);
 }
+
+// ============================================================
+// CHARTS DRAWER
+// ============================================================
+
+let chartsActiveTab   = 'weekly';
+let chartsDisplayYear = new Date().getFullYear();
+let chartMainInstance  = null;
+let chartExtraInstance = null;
+let chartsYearCache    = {};   // { year: { monthIndex: formationsData } }
+let chartsYearLoading  = false;
+
+function openChartsDrawer() {
+    const overlay = document.getElementById('charts-overlay');
+    const drawer  = document.getElementById('charts-drawer');
+    overlay.style.display = 'block';
+    drawer.style.display  = 'flex';
+    requestAnimationFrame(() => drawer.classList.add('open'));
+    chartsDisplayYear = currentYear;
+    switchChartTab(chartsActiveTab, true);
+}
+
+function closeChartsDrawer(e) {
+    if (e && e.target !== document.getElementById('charts-overlay')) return;
+    document.getElementById('charts-overlay').style.display = 'none';
+    const drawer = document.getElementById('charts-drawer');
+    drawer.classList.remove('open');
+    drawer.style.display = 'none';
+}
+
+function switchChartTab(tab, force) {
+    if (tab === chartsActiveTab && !force) return;
+    chartsActiveTab = tab;
+
+    // Update tab buttons
+    document.querySelectorAll('.chart-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+    });
+
+    // Year nav visible only for monthly/annual
+    const yearNav = document.getElementById('charts-year-nav');
+    yearNav.style.display = (tab === 'monthly' || tab === 'annual') ? 'flex' : 'none';
+    document.getElementById('charts-year-label').textContent = chartsDisplayYear;
+
+    if (tab === 'weekly')  renderWeeklyChart();
+    if (tab === 'monthly') renderMonthlyChart();
+    if (tab === 'annual')  renderAnnualChart();
+}
+
+function chartsChangeYear(delta) {
+    chartsDisplayYear += delta;
+    document.getElementById('charts-year-label').textContent = chartsDisplayYear;
+    if (chartsActiveTab === 'monthly') renderMonthlyChart();
+    if (chartsActiveTab === 'annual')  renderAnnualChart();
+}
+
+function chartsShowLoader(show) {
+    document.getElementById('charts-loader').style.display      = show ? 'flex' : 'none';
+    document.getElementById('chart-main').style.display         = show ? 'none' : 'block';
+    document.getElementById('chart-extra').style.display        = 'none';
+}
+
+function destroyCharts() {
+    if (chartMainInstance)  { chartMainInstance.destroy();  chartMainInstance  = null; }
+    if (chartExtraInstance) { chartExtraInstance.destroy(); chartExtraInstance = null; }
+}
+
+// ──────────────────────────────────────────────────────────
+// WEEKLY CHART
+// ──────────────────────────────────────────────────────────
+function renderWeeklyChart() {
+    destroyCharts();
+    chartsShowLoader(false);
+    document.getElementById('chart-extra').style.display = 'none';
+
+    const weeks = weeksInMonth;
+    if (!weeks || weeks.length === 0) {
+        showChartsEmpty('Nessun dato settimanale disponibile per questo mese.');
+        return;
+    }
+
+    // Compute formations per operator per week (exclude colorId '7')
+    const ops = Object.entries(OPERATORS)
+        .filter(([cid]) => cid !== '7')
+        .map(([cid, op]) => ({ colorId: cid, name: op.name.split(' ')[0], hex: op.hex }));
+
+    const labels = weeks.map((w, i) => 'Sett.' + (i + 1));
+    const datasets = ops.map(op => {
+        const data = weeks.map(w => {
+            const evts = allMonthEvents.filter(ev => {
+                if (!ev.start) return false;
+                const s = ev.start.dateTime ? new Date(ev.start.dateTime)
+                        : ev.start.date    ? new Date(ev.start.date) : null;
+                if (!s) return false;
+                return s >= w.start && s <= w.end && resolveColorId(ev) === op.colorId;
+            });
+            return evts.reduce((sum, ev) => {
+                const s = ev.start.dateTime ? new Date(ev.start.dateTime) : new Date(ev.start.date);
+                const e = ev.end   ? (ev.end.dateTime   ? new Date(ev.end.dateTime)   : new Date(ev.end.date)) : new Date(s.getTime() + 30*60000);
+                return sum + Math.floor((e - s) / 60000 / 30);
+            }, 0);
+        });
+        return {
+            label: op.name,
+            data,
+            backgroundColor: op.hex + 'cc',
+            borderColor: op.hex,
+            borderWidth: 1,
+            borderRadius: 4,
+        };
+    }).filter(ds => ds.data.some(v => v > 0));
+
+    const ctx = document.getElementById('chart-main').getContext('2d');
+    chartMainInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
+                title: { display: true, text: 'Dispositivi per settimana — ' + MESI[currentMonth] + ' ' + currentYear, font: { size: 13, weight: '600' } },
+                tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + ' dispositivi' } }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Dispositivi' } }
+            }
+        }
+    });
+}
+
+// ──────────────────────────────────────────────────────────
+// MONTHLY CHART
+// ──────────────────────────────────────────────────────────
+async function renderMonthlyChart() {
+    destroyCharts();
+    chartsShowLoader(true);
+
+    let yearData;
+    try {
+        yearData = await loadYearData(chartsDisplayYear);
+    } catch(e) {
+        chartsShowLoader(false);
+        showChartsEmpty('Errore nel caricamento dati: ' + e.message);
+        return;
+    }
+
+    chartsShowLoader(false);
+
+    const ops = Object.entries(OPERATORS)
+        .filter(([cid]) => cid !== '7')
+        .map(([cid, op]) => ({ colorId: cid, name: op.name.split(' ')[0], hex: op.hex }));
+
+    const labels = MESI.map(m => m.substring(0, 3));
+    const datasets = ops.map(op => {
+        const data = Array.from({length: 12}, (_, mi) => {
+            const md = yearData[mi];
+            return md && md.operators[op.colorId] ? md.operators[op.colorId].formations : 0;
+        });
+        return {
+            label: op.name,
+            data,
+            backgroundColor: op.hex + 'cc',
+            borderColor: op.hex,
+            borderWidth: 1,
+            borderRadius: 4,
+        };
+    }).filter(ds => ds.data.some(v => v > 0));
+
+    const ctx = document.getElementById('chart-main').getContext('2d');
+    chartMainInstance = new Chart(ctx, {
+        type: 'bar',
+        data: { labels, datasets },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
+                title: { display: true, text: 'Dispositivi per mese — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
+                tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + ' dispositivi' } }
+            },
+            scales: {
+                x: { stacked: true, grid: { display: false } },
+                y: { stacked: true, beginAtZero: true, ticks: { stepSize: 5 }, title: { display: true, text: 'Dispositivi' } }
+            }
+        }
+    });
+}
+
+// ──────────────────────────────────────────────────────────
+// ANNUAL CHART
+// ──────────────────────────────────────────────────────────
+async function renderAnnualChart() {
+    destroyCharts();
+    chartsShowLoader(true);
+
+    let yearData;
+    try {
+        yearData = await loadYearData(chartsDisplayYear);
+    } catch(e) {
+        chartsShowLoader(false);
+        showChartsEmpty('Errore nel caricamento dati: ' + e.message);
+        return;
+    }
+
+    chartsShowLoader(false);
+    document.getElementById('chart-extra').style.display = 'block';
+
+    const ops = Object.entries(OPERATORS)
+        .filter(([cid]) => cid !== '7')
+        .map(([cid, op]) => ({
+            colorId: cid,
+            name: op.name.split(' ').slice(0,2).join(' '),
+            hex: op.hex,
+            total: Array.from({length:12}, (_, mi) => {
+                const md = yearData[mi];
+                return md && md.operators[cid] ? md.operators[cid].formations : 0;
+            }).reduce((a,b)=>a+b,0)
+        }))
+        .sort((a,b) => b.total - a.total)
+        .filter(op => op.total > 0);
+
+    // Main: horizontal bar
+    const ctxMain = document.getElementById('chart-main').getContext('2d');
+    chartMainInstance = new Chart(ctxMain, {
+        type: 'bar',
+        data: {
+            labels: ops.map(o => o.name),
+            datasets: [{
+                label: 'Dispositivi totali',
+                data: ops.map(o => o.total),
+                backgroundColor: ops.map(o => o.hex + 'cc'),
+                borderColor: ops.map(o => o.hex),
+                borderWidth: 1.5,
+                borderRadius: 5,
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { display: false },
+                title: { display: true, text: 'Classifica operatori — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
+                tooltip: { callbacks: { label: ctx => ' ' + ctx.raw + ' dispositivi' } }
+            },
+            scales: {
+                x: { beginAtZero: true, title: { display: true, text: 'Dispositivi' } },
+                y: { grid: { display: false } }
+            }
+        }
+    });
+
+    // Extra: doughnut
+    const ctxExtra = document.getElementById('chart-extra').getContext('2d');
+    chartExtraInstance = new Chart(ctxExtra, {
+        type: 'doughnut',
+        data: {
+            labels: ops.map(o => o.name),
+            datasets: [{
+                data: ops.map(o => o.total),
+                backgroundColor: ops.map(o => o.hex + 'cc'),
+                borderColor: ops.map(o => o.hex),
+                borderWidth: 1.5,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
+                title: { display: true, text: 'Distribuzione percentuale — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
+                tooltip: {
+                    callbacks: {
+                        label: ctx => {
+                            const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                            const pct = tot > 0 ? ((ctx.raw/tot)*100).toFixed(1) : 0;
+                            return ' ' + ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// ──────────────────────────────────────────────────────────
+// LOAD YEAR DATA (cached)
+// ──────────────────────────────────────────────────────────
+async function loadYearData(year) {
+    if (chartsYearCache[year]) return chartsYearCache[year];
+
+    const results = {};
+    // Fetch months in parallel (batch of 4 to avoid rate-limit)
+    for (let batch = 0; batch < 3; batch++) {
+        const months = [batch*4, batch*4+1, batch*4+2, batch*4+3].filter(m => m < 12);
+        const fetched = await Promise.all(months.map(async m => {
+            // Use cached current month events if possible
+            if (year === currentYear && m === currentMonth && allMonthEvents.length > 0) {
+                return { m, events: allMonthEvents };
+            }
+            const evts = await fetchAllEvents(year, m);
+            return { m, events: evts };
+        }));
+        fetched.forEach(({ m, events }) => {
+            results[m] = calculateFormations(events);
+        });
+    }
+
+    chartsYearCache[year] = results;
+    return results;
+}
+
+function showChartsEmpty(msg) {
+    const content = document.getElementById('charts-content');
+    let emptyDiv = content.querySelector('.charts-empty');
+    if (!emptyDiv) {
+        emptyDiv = document.createElement('div');
+        emptyDiv.className = 'charts-empty';
+        emptyDiv.style.cssText = 'text-align:center;color:var(--text-muted);padding:3rem 1rem;font-size:0.95rem;';
+        content.appendChild(emptyDiv);
+    }
+    emptyDiv.textContent = msg;
+    document.getElementById('chart-main').style.display  = 'none';
+    document.getElementById('chart-extra').style.display = 'none';
+}
+
+// Reset year cache when calendar/month changes
+const _origLoadEvents = loadEvents;
+loadEvents = async function() {
+    chartsYearCache = {};
+    return _origLoadEvents.apply(this, arguments);
+};
 
 // Avvia app quando GIS è pronto
 window.addEventListener('load', function() {
