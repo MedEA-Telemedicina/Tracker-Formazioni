@@ -2371,17 +2371,43 @@ function updateShiftMenuLabel(loaded) {
 }
 
 function refreshAbsenceIndicators() {
+    // ALWAYS remove existing badges first
     document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
 
-    if (chartsActiveTab !== 'weekly') return;
+    // Also hide the shift info bar
+    var bar = document.getElementById('shift-info-bar');
 
+    // Only show badges in WEEKLY tab + CURRENT week
+    if (chartsActiveTab !== 'weekly') {
+        if (bar) bar.style.display = 'none';
+        return;
+    }
+    if (!shiftsData) {
+        if (bar) bar.style.display = 'none';
+        return;
+    }
+
+    // Check if selected week is the current week
+    var _isCurrentWeek = false;
+    if (selectedWeek > 0 && weeksInMonth.length > 0) {
+        var _t = new Date(), _tMid = new Date(_t.getFullYear(), _t.getMonth(), _t.getDate());
+        var _sw = weeksInMonth[selectedWeek - 1];
+        if (_sw && _tMid >= _sw.start && _tMid <= _sw.end) _isCurrentWeek = true;
+    }
+
+    if (!_isCurrentWeek) {
+        if (bar) bar.style.display = 'none';
+        return;
+    }
+
+    // Current week — add badges to operator cards
+    if (bar) bar.style.display = '';
     document.querySelectorAll('.operator-card').forEach(function(card) {
-        var nameEl = card.querySelector('.card-title h3');
-        if (!nameEl) return;
-        var name = nameEl.textContent.trim();
+        var name = card.getAttribute('data-operator');
+        if (!name) return;
 
         var absenceType = todayAbsences[name];
-        var presenceType = todayPresences[name];
+        var presenceType = (!absenceType) ? (todayPresences[name] || null) : null;
 
         if (absenceType) {
             var badge = document.createElement('span');
@@ -2399,6 +2425,9 @@ function refreshAbsenceIndicators() {
             if (pHeader) pHeader.appendChild(pBadge);
         }
     });
+
+    // Also render the info bar
+    renderShiftInfoBar();
 }
 
 function renderShiftInfoBar() {
@@ -2977,8 +3006,8 @@ function renderDashboard(data, grandTotal) {
     grid.style.display = 'grid';
     sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, grandTotal)));
 
-    // Refresh shift info bar if shifts are loaded
-    if (shiftsData && chartsActiveTab === 'weekly') { renderShiftInfoBar(); } else { var _bar = document.getElementById('shift-info-bar'); if (_bar) _bar.remove(); }
+    // Refresh shift badges on operator cards (only for weekly + current week)
+    setTimeout(function() { refreshAbsenceIndicators(); }, 50);
 }
 
 function createOperatorCard(op, total) {
@@ -2992,23 +3021,8 @@ function createOperatorCard(op, total) {
         card.addEventListener('click', () => openDetailsModal(op.colorId));
     }
 
-    // Absence / presence badge from shift data (ONLY in current week view)
-    var _absType = null, _presType = null, _shiftBadge = '';
-    var _isCurrentWeek = false;
-    if (chartsActiveTab === 'weekly' && selectedWeek > 0) {
-        var _today = new Date();
-        var _todayMid = new Date(_today.getFullYear(), _today.getMonth(), _today.getDate());
-        var _sw = weeksInMonth[selectedWeek - 1];
-        if (_sw && _todayMid >= _sw.start && _todayMid <= _sw.end) {
-            _isCurrentWeek = true;
-        }
-    }
-    if (_isCurrentWeek) {
-        _absType = todayAbsences[op.name] || null;
-        _presType = (!_absType) ? (todayPresences[op.name] || null) : null;
-        if (_absType) _shiftBadge = '<span class="absence-badge" title="' + _absType + '">' + _absType + '</span>';
-        else if (_presType) _shiftBadge = '<span class="presence-badge" title="Turno: ' + _presType + '">' + _presType + '</span>';
-    }
+    // Badge turni gestiti da refreshAbsenceIndicators()
+    card.setAttribute('data-operator', op.name);
 
     card.innerHTML =
         '<div class="card-header">'
@@ -3017,7 +3031,6 @@ function createOperatorCard(op, total) {
         + '<h3>' + escapeHtml(op.name) + '</h3>'
         + '<span class="color-name">' + op.colorName + '</span>'
         + '</div>'
-        + _shiftBadge
         + '</div>'
         + '<div class="card-body">'
         + '<div class="formation-count" style="color:' + op.hex + '">' + op.formations + '</div>'
@@ -3537,14 +3550,8 @@ function switchChartTab(tab, force) {
     if (tab === 'annual')  renderAnnualChart();
     if (tab === 'ranking') renderRankingView();
 
-    // Show/hide shift info bar based on tab
-    var _sbar = document.getElementById('shift-info-bar');
-    if (tab !== 'weekly' && _sbar) _sbar.style.display = 'none';
-    else if (tab === 'weekly' && _sbar) _sbar.style.display = '';
-    else if (tab === 'weekly' && shiftsData) renderShiftInfoBar();
-
-    // Remove shift badges from operator cards when NOT in weekly current-week view
-    document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
+    // Refresh shift badges and info bar (handles all tab/week logic)
+    refreshAbsenceIndicators();
 }
 
 function chartsChangeYear(delta) {
