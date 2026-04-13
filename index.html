@@ -948,7 +948,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
 @media (max-width: 768px) {
     header { padding: 0.75rem 1rem; }
     .header-left h1 { font-size: 0.95rem; }
-    .header-right { width: 100%; justify-content: flex-start; }
+    .header-right { width: auto; justify-content: flex-end; }
     header select { flex: 1; max-width: none; }
     .controls { padding: 1.25rem 0.75rem 0.5rem; gap: 0.75rem; }
     .controls h2 { font-size: 1.15rem; min-width: auto; }
@@ -1158,6 +1158,419 @@ header select option { background: #ffffff; color: var(--text-primary); }
     .operator-card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
     .operator-card:not(.has-data) { opacity: 1; }
 }
+
+/* ============================================================
+   HEADER MENU DROPDOWN
+   ============================================================ */
+
+.header-menu-wrapper {
+    position: relative;
+}
+
+.header-menu-toggle {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 4px;
+    width: 38px;
+    height: 38px;
+    padding: 0 !important;
+    border: 1px solid var(--border) !important;
+    background: #f4f5f7 !important;
+    border-radius: 8px !important;
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.header-menu-toggle:hover {
+    background: var(--border) !important;
+}
+
+.header-menu-toggle span {
+    display: block;
+    width: 18px;
+    height: 2px;
+    background: var(--text-primary);
+    border-radius: 2px;
+    transition: all var(--transition);
+}
+
+.header-menu-toggle.open span:nth-child(1) {
+    transform: translateY(6px) rotate(45deg);
+}
+.header-menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.header-menu-toggle.open span:nth-child(3) {
+    transform: translateY(-6px) rotate(-45deg);
+}
+
+.header-menu-dropdown {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+    padding: 0.5rem;
+    min-width: 180px;
+    z-index: 200;
+    flex-direction: column;
+    gap: 0.25rem;
+    animation: menuFadeIn 0.15s ease;
+}
+
+.header-menu-dropdown.open {
+    display: flex;
+}
+
+.header-menu-dropdown button,
+.header-menu-dropdown select {
+    width: 100% !important;
+    max-width: none !important;
+    text-align: left;
+    border-radius: 8px !important;
+    padding: 0.5rem 0.8rem !important;
+    font-size: 0.88rem !important;
+    white-space: nowrap;
+}
+
+.header-menu-dropdown #logout-btn {
+    margin-top: 0.25rem;
+    border-top: 1px solid var(--border);
+    border-radius: 0 0 8px 8px !important;
+    padding-top: 0.65rem !important;
+}
+
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ============================================================
+   FULLSCREEN CHART OVERLAY
+   ============================================================ */
+
+#chart-fullscreen-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,10,20,0.92);
+    z-index: 9999;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    cursor: pointer;
+}
+#chart-fullscreen-overlay.open {
+    display: flex;
+    animation: fadeIn 0.22s ease;
+}
+
+.chart-fullscreen-box {
+    background: white;
+    border-radius: 20px;
+    width: min(96vw, 1100px);
+    max-height: 93vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(0,0,0,0.55);
+    animation: modalIn 0.32s cubic-bezier(0.34,1.56,0.64,1);
+    cursor: default;
+}
+
+.chart-fullscreen-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    background: var(--bg);
+}
+
+.chart-fullscreen-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-fullscreen-close {
+    width: 34px; height: 34px;
+    border: none;
+    background: white;
+    border-radius: 50%;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow);
+}
+.chart-fullscreen-close:hover { background: var(--border); transform: scale(1.08); }
+
+.chart-fullscreen-body {
+    flex: 1;
+    padding: 1.5rem 2rem 2rem;
+    overflow: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: white;
+}
+
+.chart-fullscreen-body img {
+    max-width: 100%;
+    max-height: 72vh;
+    object-fit: contain;
+    border-radius: 10px;
+}
+
+/* Wrapper with expand hover button */
+.chart-canvas-wrapper {
+    position: relative;
+}
+
+.chart-expand-btn {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: rgba(255,255,255,0.95);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.3rem 0.65rem;
+    font-size: 0.7rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.22s, background 0.2s, transform 0.15s;
+    font-family: inherit;
+    color: var(--text-secondary);
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+    z-index: 10;
+    pointer-events: none;
+}
+
+.chart-canvas-wrapper:hover .chart-expand-btn {
+    opacity: 1;
+    pointer-events: all;
+}
+.chart-expand-btn:hover { background: var(--bg); transform: scale(1.06); }
+
+/* ============================================================
+   RANKING STYLES
+   ============================================================ */
+
+.ranking-period-selector {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.5rem 0 0.75rem;
+    flex-wrap: wrap;
+}
+
+.ranking-period-btn {
+    padding: 0.32rem 0.85rem;
+    border: 2px solid var(--border);
+    background: white;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: inherit;
+    color: var(--text-secondary);
+}
+.ranking-period-btn:hover { border-color: #4285f4; color: #4285f4; }
+.ranking-period-btn.active { background: var(--text-primary); color: white; border-color: var(--text-primary); }
+
+.ranking-total-badge {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.25rem;
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    border-radius: 14px;
+    color: white;
+    margin-bottom: 0.5rem;
+    box-shadow: 0 6px 20px rgba(26,26,46,0.25);
+}
+.ranking-total-badge .rb-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    opacity: 0.65;
+    text-transform: uppercase;
+    letter-spacing: 1.1px;
+    margin-bottom: 0.25rem;
+}
+.ranking-total-badge .rb-value {
+    font-size: 1.8rem;
+    font-weight: 900;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+}
+.ranking-total-badge .rb-icon { font-size: 2.2rem; }
+
+.ranking-section-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1.3px;
+    padding: 0.75rem 0 0.3rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.ranking-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.ranking-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.ranking-item {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.85rem 1rem;
+    background: white;
+    border-radius: 13px;
+    border: 1px solid var(--border);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s;
+    animation: rankSlideIn 0.45s ease both;
+    overflow: hidden;
+}
+
+@keyframes rankSlideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.ranking-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.08);
+    border-color: transparent;
+}
+
+.ranking-medal {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+    font-weight: 900;
+    flex-shrink: 0;
+}
+.ranking-medal.gold   { background: linear-gradient(135deg,#FFD700,#FFA500); box-shadow: 0 3px 8px rgba(255,165,0,0.4); }
+.ranking-medal.silver { background: linear-gradient(135deg,#D8D8D8,#A8A8A8); box-shadow: 0 3px 8px rgba(0,0,0,0.15); }
+.ranking-medal.bronze { background: linear-gradient(135deg,#CD7F32,#9B4E0A); box-shadow: 0 3px 8px rgba(139,69,19,0.3); }
+.ranking-medal.other  {
+    background: var(--bg);
+    color: var(--text-muted);
+    font-size: 0.88rem;
+    border: 2px solid var(--border);
+    font-weight: 700;
+}
+
+.ranking-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ranking-name {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0.38rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.ranking-color-dot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.ranking-bar-wrap {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.ranking-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.9s cubic-bezier(0.4,0,0.2,1);
+}
+
+.ranking-stats {
+    text-align: right;
+    flex-shrink: 0;
+    min-width: 60px;
+}
+
+.ranking-value {
+    font-size: 1.3rem;
+    font-weight: 900;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+}
+
+.ranking-sub {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+    margin-top: 0.1rem;
+}
+
+.ranking-pct-badge {
+    display: inline-block;
+    font-size: 0.64rem;
+    font-weight: 700;
+    color: white;
+    padding: 0.1rem 0.4rem;
+    border-radius: 8px;
+    margin-top: 0.2rem;
+    letter-spacing: 0.3px;
+}
+
+.ranking-item-small {
+    padding: 0.65rem 1rem !important;
+}
+
+.ranking-value-sm {
+    font-size: 1rem !important;
+}
+
 </style>
 </head>
 <body>
@@ -1197,14 +1610,21 @@ header select option { background: #ffffff; color: var(--text-primary); }
             </div>
         </div>
         <div class="header-right">
-            <select id="calendar-select" onchange="changeCalendar(this.value)" title="Seleziona calendario" style="display:none;">
-                <option>Caricamento...</option>
-            </select>
-            <button onclick="openChartsDrawer()" title="Visualizza grafici">📊 Grafici</button>
-            <button onclick="openSearchModal()" title="Cerca formazione per cliente">🔍 Cerca</button>
-            <button onclick="refreshData()" title="Aggiorna dati">🔄 Aggiorna</button>
-            <button onclick="exportCSV()" title="Esporta in CSV">📥 CSV</button>
-            <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
+            <div class="header-menu-wrapper">
+                <button class="header-menu-toggle" id="header-menu-toggle" onclick="toggleHeaderMenu()" title="Menu azioni">
+                    <span></span><span></span><span></span>
+                </button>
+                <div class="header-menu-dropdown" id="header-menu-dropdown">
+                    <select id="calendar-select" onchange="changeCalendar(this.value); closeHeaderMenu();" title="Seleziona calendario" style="display:none;">
+                        <option>Caricamento...</option>
+                    </select>
+                    <button onclick="openChartsDrawer(); closeHeaderMenu();" title="Visualizza grafici">📊 Grafici</button>
+                    <button onclick="openSearchModal(); closeHeaderMenu();" title="Cerca formazione per cliente">🔍 Cerca</button>
+                    <button onclick="refreshData(); closeHeaderMenu();" title="Aggiorna dati">🔄 Aggiorna</button>
+                    <button onclick="exportCSV(); closeHeaderMenu();" title="Esporta in CSV">📥 CSV</button>
+                    <button id="logout-btn" onclick="logout()" title="Esci dall'account">Esci</button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -1261,9 +1681,10 @@ header select option { background: #ffffff; color: var(--text-primary); }
         </div>
         <!-- Drawer Tabs -->
         <div id="charts-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;">
-            <button class="chart-tab active" data-tab="weekly"  onclick="switchChartTab('weekly')">📅 Settimanale</button>
+            <button class="chart-tab active" data-tab="weekly"  onclick="switchChartTab('weekly')">📅 Sett.</button>
             <button class="chart-tab"        data-tab="monthly" onclick="switchChartTab('monthly')">📆 Mensile</button>
             <button class="chart-tab"        data-tab="annual"  onclick="switchChartTab('annual')">📈 Annuale</button>
+            <button class="chart-tab"        data-tab="ranking" onclick="switchChartTab('ranking')">🏆 Classifica</button>
         </div>
         <!-- Year nav for monthly/annual -->
         <div id="charts-year-nav" style="display:none;align-items:center;justify-content:center;gap:1rem;padding:0.6rem 1rem;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -1277,11 +1698,31 @@ header select option { background: #ffffff; color: var(--text-primary); }
                 <div class="spinner"></div>
                 <p style="color:var(--text-secondary);">Caricamento dati...</p>
             </div>
-            <canvas id="chart-main"  style="display:none;max-height:340px;"></canvas>
-            <canvas id="chart-extra" style="display:none;max-height:260px;"></canvas>
+            <div class="chart-canvas-wrapper" id="chart-main-wrapper" style="display:none;">
+                <canvas id="chart-main" style="max-height:340px;"></canvas>
+                <button class="chart-expand-btn" onclick="openFullscreenChart('main')" title="Schermo intero">⤢ Espandi</button>
+            </div>
+            <div class="chart-canvas-wrapper" id="chart-extra-wrapper" style="display:none;">
+                <canvas id="chart-extra" style="max-height:260px;"></canvas>
+                <button class="chart-expand-btn" onclick="openFullscreenChart('extra')" title="Schermo intero">⤢ Espandi</button>
+            </div>
+            <div id="charts-ranking" style="display:none;"></div>
         </div>
     </div>
 
+</div>
+
+<!-- Chart Fullscreen Modal -->
+<div id="chart-fullscreen-overlay" onclick="handleFullscreenOverlayClick(event)">
+    <div class="chart-fullscreen-box">
+        <div class="chart-fullscreen-header">
+            <span class="chart-fullscreen-title" id="chart-fullscreen-title">📊 Grafico</span>
+            <button class="chart-fullscreen-close" onclick="closeFullscreenChart()" title="Chiudi (Esc)">✕</button>
+        </div>
+        <div class="chart-fullscreen-body">
+            <img id="chart-fullscreen-img" src="" alt="Grafico a schermo intero">
+        </div>
+    </div>
 </div>
 
 <!-- Search Modal -->
@@ -1437,6 +1878,35 @@ function login() {
     }
     tokenClient.requestAccessToken({ prompt: 'select_account' });
 }
+
+
+function toggleHeaderMenu() {
+    const dropdown = document.getElementById('header-menu-dropdown');
+    const toggle = document.getElementById('header-menu-toggle');
+    const isOpen = dropdown.classList.contains('open');
+    if (isOpen) {
+        dropdown.classList.remove('open');
+        toggle.classList.remove('open');
+    } else {
+        dropdown.classList.add('open');
+        toggle.classList.add('open');
+    }
+}
+
+function closeHeaderMenu() {
+    const dropdown = document.getElementById('header-menu-dropdown');
+    const toggle = document.getElementById('header-menu-toggle');
+    dropdown.classList.remove('open');
+    toggle.classList.remove('open');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.header-menu-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        closeHeaderMenu();
+    }
+});
 
 function logout() {
     if (accessToken) {
@@ -2165,6 +2635,9 @@ function handleOverlayClick(event) {
 // Chiudi modal con Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
+        if (document.getElementById('chart-fullscreen-overlay') && document.getElementById('chart-fullscreen-overlay').classList.contains('open')) {
+            closeFullscreenChart(); return;
+        }
         closeSearchModal();
         closeModal();
         return;
@@ -2354,14 +2827,15 @@ function switchChartTab(tab, force) {
         btn.classList.toggle('active', btn.dataset.tab === tab);
     });
 
-    // Year nav visible only for monthly/annual
+    // Year nav visible only for monthly/annual/ranking
     const yearNav = document.getElementById('charts-year-nav');
-    yearNav.style.display = (tab === 'monthly' || tab === 'annual') ? 'flex' : 'none';
+    yearNav.style.display = (tab === 'monthly' || tab === 'annual' || tab === 'ranking') ? 'flex' : 'none';
     document.getElementById('charts-year-label').textContent = chartsDisplayYear;
 
     if (tab === 'weekly')  renderWeeklyChart();
     if (tab === 'monthly') renderMonthlyChart();
     if (tab === 'annual')  renderAnnualChart();
+    if (tab === 'ranking') renderRankingView();
 }
 
 function chartsChangeYear(delta) {
@@ -2369,12 +2843,14 @@ function chartsChangeYear(delta) {
     document.getElementById('charts-year-label').textContent = chartsDisplayYear;
     if (chartsActiveTab === 'monthly') renderMonthlyChart();
     if (chartsActiveTab === 'annual')  renderAnnualChart();
+    if (chartsActiveTab === 'ranking') renderRankingView();
 }
 
 function chartsShowLoader(show) {
-    document.getElementById('charts-loader').style.display      = show ? 'flex' : 'none';
-    document.getElementById('chart-main').style.display         = show ? 'none' : 'block';
-    document.getElementById('chart-extra').style.display        = 'none';
+    document.getElementById('charts-loader').style.display       = show ? 'flex' : 'none';
+    document.getElementById('chart-main-wrapper').style.display  = show ? 'none' : 'block';
+    document.getElementById('chart-extra-wrapper').style.display = 'none';
+    document.getElementById('charts-ranking').style.display      = 'none';
 }
 
 function destroyCharts() {
@@ -2420,13 +2896,15 @@ function renderWeeklyChart() {
         return {
             label: op.name,
             data,
-            backgroundColor: op.hex + 'cc',
+            backgroundColor: op.hex + 'dd',
             borderColor: op.hex,
-            borderWidth: 1,
-            borderRadius: 4,
+            borderWidth: 0,
+            borderRadius: 5,
+            borderSkipped: false,
         };
     }).filter(ds => ds.data.some(v => v > 0));
 
+    const chartTitleWeekly = 'Dispositivi per settimana — ' + MESI[currentMonth] + ' ' + currentYear;
     const ctx = document.getElementById('chart-main').getContext('2d');
     chartMainInstance = new Chart(ctx, {
         type: 'bar',
@@ -2434,17 +2912,51 @@ function renderWeeklyChart() {
         options: {
             responsive: true,
             maintainAspectRatio: true,
+            animation: {
+                duration: 800,
+                easing: 'easeInOutQuart',
+                delay: (context) => context.dataIndex * 40
+            },
             plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
-                title: { display: true, text: 'Dispositivi per settimana — ' + MESI[currentMonth] + ' ' + currentYear, font: { size: 13, weight: '600' } },
-                tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + ' dispositivi' } }
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 16, usePointStyle: true, pointStyle: 'circle' }
+                },
+                title: {
+                    display: true,
+                    text: chartTitleWeekly,
+                    font: { size: 13, weight: '700', family: 'Inter' },
+                    color: '#1a1a2e',
+                    padding: { bottom: 16 }
+                },
+                tooltip: {
+                    mode: 'index', intersect: false,
+                    backgroundColor: 'rgba(26,26,46,0.93)',
+                    titleFont: { family: 'Inter', weight: '700', size: 12 },
+                    bodyFont: { family: 'Inter', size: 11 },
+                    padding: 12, cornerRadius: 10, caretSize: 6,
+                    callbacks: { label: ctx => '  ' + ctx.dataset.label + ': ' + ctx.raw + ' disp.' }
+                }
             },
             scales: {
-                x: { stacked: true, grid: { display: false } },
-                y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 }, title: { display: true, text: 'Dispositivi' } }
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 } }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { stepSize: 1, font: { family: 'Inter', size: 11 } },
+                    title: { display: true, text: 'Dispositivi', font: { family: 'Inter', size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                }
             }
         }
     });
+    document.getElementById('chart-main-wrapper').style.display = 'block';
+    document.getElementById('chart-extra-wrapper').style.display = 'none';
+    window._chartTitleMain = chartTitleWeekly;
 }
 
 // ──────────────────────────────────────────────────────────
@@ -2485,6 +2997,7 @@ async function renderMonthlyChart() {
         };
     }).filter(ds => ds.data.some(v => v > 0));
 
+    const chartTitleMonthly = 'Dispositivi per mese — ' + chartsDisplayYear;
     const ctx = document.getElementById('chart-main').getContext('2d');
     chartMainInstance = new Chart(ctx, {
         type: 'bar',
@@ -2492,17 +3005,51 @@ async function renderMonthlyChart() {
         options: {
             responsive: true,
             maintainAspectRatio: true,
+            animation: {
+                duration: 850,
+                easing: 'easeInOutQuart',
+                delay: (context) => context.dataIndex * 30
+            },
             plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
-                title: { display: true, text: 'Dispositivi per mese — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
-                tooltip: { callbacks: { label: ctx => ' ' + ctx.dataset.label + ': ' + ctx.raw + ' dispositivi' } }
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 16, usePointStyle: true, pointStyle: 'circle' }
+                },
+                title: {
+                    display: true,
+                    text: chartTitleMonthly,
+                    font: { size: 13, weight: '700', family: 'Inter' },
+                    color: '#1a1a2e',
+                    padding: { bottom: 16 }
+                },
+                tooltip: {
+                    mode: 'index', intersect: false,
+                    backgroundColor: 'rgba(26,26,46,0.93)',
+                    titleFont: { family: 'Inter', weight: '700', size: 12 },
+                    bodyFont: { family: 'Inter', size: 11 },
+                    padding: 12, cornerRadius: 10, caretSize: 6,
+                    callbacks: { label: ctx => '  ' + ctx.dataset.label + ': ' + ctx.raw + ' disp.' }
+                }
             },
             scales: {
-                x: { stacked: true, grid: { display: false } },
-                y: { stacked: true, beginAtZero: true, ticks: { stepSize: 5 }, title: { display: true, text: 'Dispositivi' } }
+                x: {
+                    stacked: true,
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 } }
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    ticks: { stepSize: 5, font: { family: 'Inter', size: 11 } },
+                    title: { display: true, text: 'Dispositivi', font: { family: 'Inter', size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                }
             }
         }
     });
+    document.getElementById('chart-main-wrapper').style.display = 'block';
+    document.getElementById('chart-extra-wrapper').style.display = 'none';
+    window._chartTitleMain = chartTitleMonthly;
 }
 
 // ──────────────────────────────────────────────────────────
@@ -2538,6 +3085,9 @@ async function renderAnnualChart() {
         .sort((a,b) => b.total - a.total)
         .filter(op => op.total > 0);
 
+    const chartTitleAnnualMain  = 'Classifica operatori — ' + chartsDisplayYear;
+    const chartTitleAnnualExtra = 'Distribuzione — ' + chartsDisplayYear;
+
     // Main: horizontal bar
     const ctxMain = document.getElementById('chart-main').getContext('2d');
     chartMainInstance = new Chart(ctxMain, {
@@ -2547,24 +3097,56 @@ async function renderAnnualChart() {
             datasets: [{
                 label: 'Dispositivi totali',
                 data: ops.map(o => o.total),
-                backgroundColor: ops.map(o => o.hex + 'cc'),
+                backgroundColor: ops.map(o => o.hex + 'e0'),
                 borderColor: ops.map(o => o.hex),
-                borderWidth: 1.5,
-                borderRadius: 5,
+                borderWidth: 0,
+                borderRadius: 8,
+                borderSkipped: false,
             }]
         },
         options: {
             indexAxis: 'y',
             responsive: true,
             maintainAspectRatio: true,
+            animation: {
+                duration: 900,
+                easing: 'easeInOutQuart',
+                delay: (context) => context.dataIndex * 70
+            },
             plugins: {
                 legend: { display: false },
-                title: { display: true, text: 'Classifica operatori — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
-                tooltip: { callbacks: { label: ctx => ' ' + ctx.raw + ' dispositivi' } }
+                title: {
+                    display: true,
+                    text: chartTitleAnnualMain,
+                    font: { size: 13, weight: '700', family: 'Inter' },
+                    color: '#1a1a2e',
+                    padding: { bottom: 16 }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.93)',
+                    titleFont: { family: 'Inter', weight: '700', size: 12 },
+                    bodyFont: { family: 'Inter', size: 11 },
+                    padding: 12, cornerRadius: 10, caretSize: 6,
+                    callbacks: {
+                        label: ctx => {
+                            const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
+                            const pct = tot > 0 ? ((ctx.raw/tot)*100).toFixed(1) : 0;
+                            return '  ' + ctx.raw + ' dispositivi (' + pct + '%)';
+                        }
+                    }
+                }
             },
             scales: {
-                x: { beginAtZero: true, title: { display: true, text: 'Dispositivi' } },
-                y: { grid: { display: false } }
+                x: {
+                    beginAtZero: true,
+                    title: { display: true, text: 'Dispositivi', font: { family: 'Inter', size: 11 } },
+                    ticks: { font: { family: 'Inter', size: 11 } },
+                    grid: { color: 'rgba(0,0,0,0.04)' }
+                },
+                y: {
+                    grid: { display: false },
+                    ticks: { font: { family: 'Inter', size: 11 } }
+                }
             }
         }
     });
@@ -2577,29 +3159,55 @@ async function renderAnnualChart() {
             labels: ops.map(o => o.name),
             datasets: [{
                 data: ops.map(o => o.total),
-                backgroundColor: ops.map(o => o.hex + 'cc'),
+                backgroundColor: ops.map(o => o.hex + 'e0'),
                 borderColor: ops.map(o => o.hex),
-                borderWidth: 1.5,
+                borderWidth: 2,
+                hoverOffset: 10,
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
+            cutout: '62%',
+            animation: {
+                duration: 900,
+                easing: 'easeInOutQuart',
+                animateRotate: true,
+                animateScale: true
+            },
             plugins: {
-                legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 14 } },
-                title: { display: true, text: 'Distribuzione percentuale — ' + chartsDisplayYear, font: { size: 13, weight: '600' } },
+                legend: {
+                    position: 'bottom',
+                    labels: { font: { size: 11, family: 'Inter' }, boxWidth: 10, padding: 14, usePointStyle: true, pointStyle: 'circle' }
+                },
+                title: {
+                    display: true,
+                    text: chartTitleAnnualExtra,
+                    font: { size: 13, weight: '700', family: 'Inter' },
+                    color: '#1a1a2e',
+                    padding: { bottom: 12 }
+                },
                 tooltip: {
+                    backgroundColor: 'rgba(26,26,46,0.93)',
+                    titleFont: { family: 'Inter', weight: '700', size: 12 },
+                    bodyFont: { family: 'Inter', size: 11 },
+                    padding: 12, cornerRadius: 10, caretSize: 6,
                     callbacks: {
                         label: ctx => {
                             const tot = ctx.dataset.data.reduce((a,b)=>a+b,0);
                             const pct = tot > 0 ? ((ctx.raw/tot)*100).toFixed(1) : 0;
-                            return ' ' + ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
+                            return '  ' + ctx.label + ': ' + ctx.raw + ' (' + pct + '%)';
                         }
                     }
                 }
             }
         }
     });
+
+    document.getElementById('chart-main-wrapper').style.display  = 'block';
+    document.getElementById('chart-extra-wrapper').style.display = 'block';
+    window._chartTitleMain  = chartTitleAnnualMain;
+    window._chartTitleExtra = chartTitleAnnualExtra;
 }
 
 // ──────────────────────────────────────────────────────────
@@ -2639,8 +3247,192 @@ function showChartsEmpty(msg) {
         content.appendChild(emptyDiv);
     }
     emptyDiv.textContent = msg;
-    document.getElementById('chart-main').style.display  = 'none';
-    document.getElementById('chart-extra').style.display = 'none';
+    document.getElementById('chart-main-wrapper').style.display  = 'none';
+    document.getElementById('chart-extra-wrapper').style.display = 'none';
+}
+
+// ──────────────────────────────────────────────────────────
+// FULLSCREEN CHART (capture canvas as image)
+// ──────────────────────────────────────────────────────────
+
+function openFullscreenChart(which) {
+    const canvasId = which === 'main' ? 'chart-main' : 'chart-extra';
+    const canvas   = document.getElementById(canvasId);
+    if (!canvas || !canvas.getContext) return;
+
+    const imageUrl = canvas.toDataURL('image/png', 1.0);
+    const title    = which === 'main'
+        ? (window._chartTitleMain  || '📊 Grafico')
+        : (window._chartTitleExtra || '📊 Grafico');
+
+    document.getElementById('chart-fullscreen-title').textContent = '📊 ' + title;
+    document.getElementById('chart-fullscreen-img').src = imageUrl;
+
+    const overlay = document.getElementById('chart-fullscreen-overlay');
+    overlay.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeFullscreenChart() {
+    document.getElementById('chart-fullscreen-overlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function handleFullscreenOverlayClick(event) {
+    if (event.target === document.getElementById('chart-fullscreen-overlay')) {
+        closeFullscreenChart();
+    }
+}
+
+// ──────────────────────────────────────────────────────────
+// RANKING VIEW
+// ──────────────────────────────────────────────────────────
+let rankingPeriod = 'month';
+
+async function renderRankingView() {
+    destroyCharts();
+    document.getElementById('chart-main-wrapper').style.display  = 'none';
+    document.getElementById('chart-extra-wrapper').style.display = 'none';
+    document.getElementById('charts-loader').style.display       = 'none';
+
+    const rankDiv = document.getElementById('charts-ranking');
+    rankDiv.style.display = 'block';
+    rankDiv.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;font-size:0.9rem;">⏳ Caricamento classifica...</div>';
+
+    try {
+        let opsData = [], grandTotal = 0, periodLabel = '';
+
+        if (rankingPeriod === 'month') {
+            const data = (typeof currentData !== 'undefined' && currentData) ? currentData : filteredData;
+            if (!data) {
+                rankDiv.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;">Nessun dato. Torna alla dashboard e ricarica.</div>';
+                return;
+            }
+            opsData = Object.values(data.operators)
+                .filter(op => op.colorId !== '7')
+                .map(op => ({ name: op.name, hex: op.hex, formations: op.formations, hours: op.totalMinutes, events: op.eventCount }))
+                .sort((a, b) => b.formations - a.formations);
+            grandTotal  = opsData.reduce((s, o) => s + o.formations, 0);
+            periodLabel = MESI[currentMonth] + ' ' + currentYear;
+
+        } else {
+            // Year data — show loader
+            document.getElementById('charts-loader').style.display = 'flex';
+            rankDiv.style.display = 'none';
+            let yearData;
+            try { yearData = await loadYearData(chartsDisplayYear); }
+            catch(e) {
+                document.getElementById('charts-loader').style.display = 'none';
+                rankDiv.style.display = 'block';
+                rankDiv.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;">❌ Errore: ' + escapeHtml(e.message) + '</div>';
+                return;
+            }
+            document.getElementById('charts-loader').style.display = 'none';
+            rankDiv.style.display = 'block';
+
+            const opMap = {};
+            Object.entries(OPERATORS).filter(([cid]) => cid !== '7').forEach(([cid, op]) => {
+                opMap[cid] = { name: op.name, hex: op.hex, colorId: cid, formations: 0, hours: 0, events: 0 };
+            });
+            for (let m = 0; m < 12; m++) {
+                const md = yearData[m];
+                if (!md) continue;
+                Object.entries(md.operators).forEach(([cid, op]) => {
+                    if (cid === '7' || !opMap[cid]) return;
+                    opMap[cid].formations += op.formations;
+                    opMap[cid].hours      += op.totalMinutes;
+                    opMap[cid].events     += op.eventCount;
+                });
+            }
+            opsData     = Object.values(opMap).sort((a, b) => b.formations - a.formations);
+            grandTotal  = opsData.reduce((s, o) => s + o.formations, 0);
+            periodLabel = 'Anno ' + chartsDisplayYear;
+        }
+
+        buildRankingHTML(rankDiv, opsData, grandTotal, periodLabel);
+
+    } catch(err) {
+        rankDiv.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:2rem;">❌ Errore: ' + escapeHtml(err.message) + '</div>';
+    }
+}
+
+function buildRankingHTML(container, ops, grandTotal, periodLabel) {
+    const medals      = ['gold', 'silver', 'bronze'];
+    const medalEmoji  = ['🥇', '🥈', '🥉'];
+
+    let html = '';
+
+    // Period toggle
+    html += '<div class="ranking-period-selector">';
+    html += '<button class="ranking-period-btn' + (rankingPeriod === 'month' ? ' active' : '') + '" onclick="setRankingPeriod('month')">📅 ' + MESI[currentMonth] + ' ' + currentYear + '</button>';
+    html += '<button class="ranking-period-btn' + (rankingPeriod === 'year'  ? ' active' : '') + '" onclick="setRankingPeriod('year')" >📆 Anno ' + chartsDisplayYear + '</button>';
+    html += '</div>';
+
+    // Total badge
+    html += '<div class="ranking-total-badge">';
+    html += '<div><div class="rb-label">Totale dispositivi &mdash; ' + escapeHtml(periodLabel) + '</div>';
+    html += '<div class="rb-value">' + grandTotal + '</div></div>';
+    html += '<div class="rb-icon">🏆</div>';
+    html += '</div>';
+
+    // ── Main ranking by formations ──
+    html += '<div class="ranking-section-title">📊 Classifica dispositivi</div>';
+    html += '<div class="ranking-section">';
+    const maxFormations = ops[0] ? Math.max(ops[0].formations, 1) : 1;
+
+    ops.forEach((op, idx) => {
+        if (op.formations === 0 && grandTotal > 0) return; // skip zeros if there's data
+        const pct      = grandTotal > 0 ? ((op.formations / grandTotal) * 100).toFixed(1) : '0.0';
+        const barW     = ((op.formations / maxFormations) * 100).toFixed(1);
+        const mClass   = idx < 3 ? medals[idx] : 'other';
+        const mContent = idx < 3 ? medalEmoji[idx] : (idx + 1);
+        const delay    = idx * 55;
+
+        html += '<div class="ranking-item" style="animation-delay:' + delay + 'ms;">';
+        html += '<div class="ranking-medal ' + mClass + '">' + mContent + '</div>';
+        html += '<div class="ranking-info">';
+        html += '<div class="ranking-name"><span class="ranking-color-dot" style="background:' + op.hex + ';"></span>' + escapeHtml(op.name) + '</div>';
+        html += '<div class="ranking-bar-wrap"><div class="ranking-bar-fill" style="width:' + barW + '%;background:' + op.hex + ';"></div></div>';
+        html += '</div>';
+        html += '<div class="ranking-stats">';
+        html += '<div class="ranking-value" style="color:' + op.hex + '">' + op.formations + '</div>';
+        html += '<div class="ranking-sub">dispositivi</div>';
+        html += '<div class="ranking-pct-badge" style="background:' + op.hex + '">' + pct + '%</div>';
+        html += '</div>';
+        html += '</div>';
+    });
+    html += '</div>';
+
+    // ── Secondary: hours ranking ──
+    const opsByHours = [...ops].filter(o => o.hours > 0).sort((a, b) => b.hours - a.hours);
+    if (opsByHours.length > 0) {
+        html += '<div class="ranking-section-title" style="margin-top:0.5rem;">⏱️ Ore lavorate</div>';
+        html += '<div class="ranking-section">';
+        const maxHours = opsByHours[0].hours;
+        opsByHours.forEach((op, idx) => {
+            const barW = ((op.hours / maxHours) * 100).toFixed(1);
+            const delay = idx * 45 + 500;
+            html += '<div class="ranking-item ranking-item-small" style="animation-delay:' + delay + 'ms;">';
+            html += '<div class="ranking-medal other" style="font-size:0.82rem;">' + (idx + 1) + '</div>';
+            html += '<div class="ranking-info">';
+            html += '<div class="ranking-name"><span class="ranking-color-dot" style="background:' + op.hex + ';"></span>' + escapeHtml(op.name) + '</div>';
+            html += '<div class="ranking-bar-wrap"><div class="ranking-bar-fill" style="width:' + barW + '%;background:' + op.hex + ';"></div></div>';
+            html += '</div>';
+            html += '<div class="ranking-stats">';
+            html += '<div class="ranking-value ranking-value-sm" style="color:' + op.hex + '">' + formatHours(op.hours) + '</div>';
+            html += '<div class="ranking-sub">' + op.events + ' formaz.</div>';
+            html += '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+
+    container.innerHTML = html;
+}
+
+function setRankingPeriod(period) {
+    rankingPeriod = period;
+    renderRankingView();
 }
 
 // Reset year cache when calendar/month changes
