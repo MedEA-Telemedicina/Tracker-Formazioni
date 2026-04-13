@@ -1810,6 +1810,113 @@ header select option { background: #ffffff; color: var(--text-primary); }
     flex-shrink: 0;
 }
 
+
+/* === DA ASSOCIARE - SCROLL TO TODAY & ASSIGN === */
+.da-modal-today-btn {
+    position: sticky;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(102,126,234,0.5);
+    display: none;
+    animation: fadeInUp 0.3s ease;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.da-modal-today-btn:hover {
+    transform: translateX(-50%) scale(1.05);
+    box-shadow: 0 6px 28px rgba(102,126,234,0.7);
+}
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(10px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+.modal-day-header.today-header {
+    background: linear-gradient(135deg, #667eea22, #764ba222);
+    border-left: 4px solid #667eea;
+    padding-left: 12px;
+    border-radius: 8px;
+}
+.modal-day-header.today-header::after {
+    content: ' — OGGI';
+    font-size: 11px;
+    font-weight: 700;
+    color: #667eea;
+    background: #667eea22;
+    padding: 2px 8px;
+    border-radius: 10px;
+    margin-left: 8px;
+}
+/* Assign operator dropdown */
+.assign-btn {
+    background: linear-gradient(135deg, #039BE5, #0277BD);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.assign-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 12px rgba(3,155,229,0.4);
+}
+.assign-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 8px 0;
+    min-width: 200px;
+    z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    animation: fadeInUp 0.2s ease;
+}
+.assign-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: background 0.15s;
+    font-size: 13px;
+    color: #e0e0e0;
+}
+.assign-dropdown-item:hover {
+    background: rgba(255,255,255,0.08);
+}
+.assign-dropdown-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.assign-spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+}
+.modal-event-row {
+    position: relative;
+}
+
 </style>
 <!-- SheetJS for Excel parsing -->
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
@@ -2107,14 +2214,15 @@ function buildTodayFromAllShifts() {
     todayPresences = {};
 
     var today = new Date();
-    // Build date key in format YYYY-MM-DD
     var dateKey = today.getFullYear() + '-' + String(today.getMonth() + 1).padStart(2, '0') + '-' + String(today.getDate()).padStart(2, '0');
 
     var operators = Object.keys(allShiftsMap);
     for (var i = 0; i < operators.length; i++) {
         var opName = operators[i];
         var dayData = allShiftsMap[opName];
-        if (!dayData || !dayData[dateKey]) continue;
+        if (!dayData[dateKey]) { 
+            continue; 
+        }
 
         var cellValue = dayData[dateKey];
         var cellLower = cellValue.toLowerCase();
@@ -2397,7 +2505,6 @@ function refreshAbsenceIndicators() {
     // ALWAYS remove existing badges first
     document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
 
-    // Also hide the shift info bar
     var bar = document.getElementById('shift-info-bar');
 
     // Only show badges in WEEKLY tab + CURRENT week
@@ -2422,7 +2529,6 @@ function refreshAbsenceIndicators() {
         if (bar) bar.style.display = 'none';
         return;
     }
-
     // Current week — add badges to operator cards
     if (bar) bar.style.display = '';
     document.querySelectorAll('.operator-card').forEach(function(card) {
@@ -2553,7 +2659,7 @@ function initApp() {
 
     tokenClient = google.accounts.oauth2.initTokenClient({
         client_id: CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/calendar.readonly',
+        scope: 'https://www.googleapis.com/auth/calendar.events',
         callback: handleTokenResponse,
         prompt: '',
     });
@@ -2922,11 +3028,13 @@ function calculateFormations(events) {
         counts[colorId].totalMinutes  += durationMinutes;
         counts[colorId].eventCount++;
         counts[colorId].events.push({
+            id: event.id,
             title: event.summary || '(Senza titolo)',
             start: startTime,
             end: endTime,
             duration: durationMinutes,
-            formations
+            formations,
+            colorId: colorId
         });
 
         totalFormations += formations;
@@ -3216,17 +3324,153 @@ function renderSearchResults(events, query) {
 }
 
 function openDaAssociareModal() {
-    // Scorri automaticamente alla settimana corrente prima di aprire il modale
-    const today = new Date();
-    if (today.getFullYear() === currentYear && today.getMonth() === currentMonth) {
-        const todayMidnight = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        let foundWeek = 0;
-        weeksInMonth.forEach((w, i) => {
-            if (todayMidnight >= w.start && todayMidnight <= w.end) foundWeek = i + 1;
-        });
-        if (foundWeek !== selectedWeek) selectWeek(foundWeek);
-    }
     openDetailsModal('7');
+    // Scroll to today after modal opens
+    requestAnimationFrame(() => {
+        const todayHeader = document.querySelector('.modal-day-header.today-header');
+        const listEl = document.getElementById('modal-events-list');
+        if (todayHeader && listEl) {
+            todayHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        setupDaAssociareTodayBtn(listEl);
+    });
+}
+
+function setupDaAssociareTodayBtn(listEl) {
+    if (!listEl) return;
+    let btn = document.getElementById('da-oggi-btn');
+    if (!btn) {
+        btn = document.createElement('button');
+        btn.id = 'da-oggi-btn';
+        btn.className = 'da-modal-today-btn';
+        btn.textContent = '📍 Oggi';
+        btn.onclick = function() {
+            const hdr = document.querySelector('.modal-day-header.today-header');
+            if (hdr) hdr.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
+        listEl.parentElement.appendChild(btn);
+    }
+    // Show/hide based on scroll
+    const checkScroll = () => {
+        const hdr = document.querySelector('.modal-day-header.today-header');
+        if (!hdr || !btn) return;
+        const rect = hdr.getBoundingClientRect();
+        const listRect = listEl.getBoundingClientRect();
+        const isVisible = rect.top >= listRect.top - 50 && rect.bottom <= listRect.bottom + 50;
+        btn.style.display = isVisible ? 'none' : 'block';
+    };
+    listEl.addEventListener('scroll', checkScroll);
+    checkScroll();
+}
+
+// Assign event to operator
+async function assignEventToOperator(eventId, targetColorId, btnElement) {
+    if (!accessToken || !eventId) return;
+    
+    // Show spinner
+    const origHTML = btnElement.innerHTML;
+    btnElement.innerHTML = '<span class="assign-spinner"></span>';
+    btnElement.disabled = true;
+    
+    // Close any open dropdown
+    document.querySelectorAll('.assign-dropdown').forEach(d => d.remove());
+    
+    try {
+        const url = 'https://www.googleapis.com/calendar/v3/calendars/'
+            + encodeURIComponent(selectedCalendarId)
+            + '/events/' + encodeURIComponent(eventId);
+        
+        const resp = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ colorId: targetColorId })
+        });
+        
+        if (resp.status === 401) {
+            tokenClient.requestAccessToken({ prompt: '' });
+            throw new Error('Token expired');
+        }
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error?.message || 'Errore API');
+        }
+        
+        // Success! Close modal and reload
+        closeModal();
+        showLoading(true);
+        await loadEvents();
+        showLoading(false);
+        
+        // Show success toast
+        showToast('✅ Formazione assegnata a ' + (OPERATORS[targetColorId]?.name || 'operatore'));
+        
+    } catch (e) {
+        btnElement.innerHTML = origHTML;
+        btnElement.disabled = false;
+        if (e.message !== 'Token expired') {
+            showToast('❌ Errore: ' + e.message);
+        }
+    }
+}
+
+function showAssignDropdown(eventId, btnElement) {
+    // Close any existing dropdown
+    document.querySelectorAll('.assign-dropdown').forEach(d => d.remove());
+    
+    const dropdown = document.createElement('div');
+    dropdown.className = 'assign-dropdown';
+    
+    // Add all operators except "Da Associare" (colorId 7)
+    Object.entries(OPERATORS).forEach(([colorId, op]) => {
+        if (colorId === '7') return; // skip "Da Associare" itself
+        const item = document.createElement('div');
+        item.className = 'assign-dropdown-item';
+        item.innerHTML = '<span class="assign-dropdown-dot" style="background:' + op.hex + '"></span>'
+            + '<span>' + op.name + '</span>';
+        item.onclick = function(e) {
+            e.stopPropagation();
+            dropdown.remove();
+            assignEventToOperator(eventId, colorId, btnElement);
+        };
+        dropdown.appendChild(item);
+    });
+    
+    btnElement.parentElement.style.position = 'relative';
+    btnElement.parentElement.appendChild(dropdown);
+    
+    // Close on outside click
+    setTimeout(() => {
+        document.addEventListener('click', function closeDD(e) {
+            if (!dropdown.contains(e.target) && e.target !== btnElement) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDD);
+            }
+        });
+    }, 10);
+}
+
+function showToast(message) {
+    let toast = document.getElementById('toast-msg');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast-msg';
+        toast.style.cssText = 'position:fixed;bottom:30px;left:50%;transform:translateX(-50%);'
+            + 'background:#1e1e2e;color:#fff;padding:14px 28px;border-radius:16px;'
+            + 'font-size:14px;font-weight:600;z-index:100000;box-shadow:0 8px 32px rgba(0,0,0,0.5);'
+            + 'border:1px solid rgba(255,255,255,0.1);transition:opacity 0.3s;';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    toast.style.opacity = '1';
+    toast.style.display = 'block';
+    clearTimeout(toast._timer);
+    toast._timer = setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.style.display = 'none', 300);
+    }, 3000);
 }
 
 // ============================================================
@@ -3327,23 +3571,32 @@ function openDetailsModal(colorId) {
 
         let html = '';
         let globalIdx = 1;
+        const isAssociare = (colorId === '7');
+        const todayStr = new Date().toLocaleDateString('it-IT', {
+            weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+        });
         dayKeys.forEach(dayLabel => {
+            const isToday = (dayLabel === todayStr);
             html += '<div class="modal-day-group">';
-            html += '<div class="modal-day-header">' + dayLabel + '</div>';
+            html += '<div class="modal-day-header' + (isToday ? ' today-header' : '') + '" '
+                + (isToday ? 'id="da-associare-today"' : '') + '>'
+                + dayLabel + '</div>';
             byDay[dayLabel].forEach(e => {
                 html += '<div class="modal-event-row">'
                     + '<div class="modal-event-num">' + globalIdx + '</div>'
                     + '<div class="modal-event-info">'
                     + '<div class="modal-event-title">' + escapeHtml(e.title) + '</div>'
                     + '<div class="modal-event-date">'
-                    + formatTime(e.start) + ' → ' + formatTime(e.end)
+                    + formatTime(e.start) + ' \u2192 ' + formatTime(e.end)
                     + '</div>'
                     + '</div>'
                     + '<div class="modal-event-badge">'
                     + '<span class="modal-event-duration">' + formatDuration(e.duration) + '</span>'
-                    + '<span class="modal-event-formations" style="background:' + op.hex + '">'
-                    + e.formations + ' disp.'
-                    + '</span>'
+                    + (isAssociare && e.id
+                        ? '<button class="assign-btn" onclick="showAssignDropdown(\'' + e.id + '\', this)">\u{1F464} Assegna</button>'
+                        : '<span class="modal-event-formations" style="background:' + op.hex + '">'
+                        + e.formations + ' disp.'
+                        + '</span>')
                     + '</div>'
                     + '</div>';
                 globalIdx++;
