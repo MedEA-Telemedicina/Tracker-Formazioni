@@ -3479,6 +3479,9 @@ function switchChartTab(tab, force) {
     if (tab !== 'weekly' && _sbar) _sbar.style.display = 'none';
     else if (tab === 'weekly' && _sbar) _sbar.style.display = '';
     else if (tab === 'weekly' && shiftsData) renderShiftInfoBar();
+
+    // Remove shift badges from operator cards when NOT in weekly current-week view
+    document.querySelectorAll('.absence-badge, .presence-badge').forEach(function(el) { el.remove(); });
 }
 
 function chartsChangeYear(delta) {
