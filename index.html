@@ -1806,10 +1806,10 @@ header select option { background: #ffffff; color: var(--text-primary); }
             </div>
         </div>
         <div class="header-right">
-            <div class="header-menu-wrapper">
-                <button class="refresh-btn" id="refresh-btn" onclick="refreshData()" title="Aggiorna dati">
+            <button class="refresh-btn" id="refresh-btn" onclick="refreshData()" title="Aggiorna dati">
                     🔄
                 </button>
+                <div class="header-menu-wrapper">
                 <button class="header-menu-toggle" id="header-menu-toggle" onclick="toggleHeaderMenu()" title="Menu azioni">
                     <span></span><span></span><span></span>
                 </button>
@@ -2052,6 +2052,36 @@ function openShiftUpload() {
         if (file) parseShiftExcel(file);
     };
     input.click();
+}
+
+
+function matchTeamsToOperator(teamsName) {
+    var needle = teamsName.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e')
+        .replace(/[ìíîï]/g,'i').replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').trim();
+    var ops = Object.values(OPERATORS);
+    for (var i = 0; i < ops.length; i++) {
+        var opLower = ops[i].name.toLowerCase().trim();
+        if (opLower === needle) return ops[i].name;
+    }
+    for (var i = 0; i < ops.length; i++) {
+        var opLower = ops[i].name.toLowerCase().trim();
+        if (needle.indexOf(opLower) !== -1 || opLower.indexOf(needle) !== -1) return ops[i].name;
+    }
+    var needleParts = needle.split(/\s+/);
+    var needleSurname = needleParts[needleParts.length - 1];
+    for (var i = 0; i < ops.length; i++) {
+        var opLower = ops[i].name.toLowerCase().trim();
+        var opParts = opLower.split(/\s+/);
+        var opSurname = opParts[opParts.length - 1];
+        if (opSurname === needleSurname && opSurname.length > 2) return ops[i].name;
+    }
+    var needleFirst = needleParts[0];
+    for (var i = 0; i < ops.length; i++) {
+        var opLower = ops[i].name.toLowerCase().trim();
+        var opParts = opLower.split(/\s+/);
+        if (opParts[0] === needleFirst && needleFirst.length > 2) return ops[i].name;
+    }
+    return null;
 }
 
 function parseShiftExcel(file) {
