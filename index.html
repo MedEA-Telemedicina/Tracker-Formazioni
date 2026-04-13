@@ -1246,6 +1246,51 @@ header select option { background: #ffffff; color: var(--text-primary); }
     padding-top: 0.65rem !important;
 }
 
+/* Turni submenu */
+.turni-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    font-weight: 600;
+}
+.turni-toggle:hover {
+    background: var(--bg-secondary);
+}
+.turni-arrow {
+    margin-left: auto;
+    font-size: 0.75rem;
+    transition: transform 0.2s ease;
+}
+.turni-arrow.open {
+    transform: rotate(90deg);
+}
+.turni-submenu {
+    display: none;
+    flex-direction: column;
+    padding-left: 0.5rem;
+    gap: 0.15rem;
+    overflow: hidden;
+    animation: submenuSlide 0.2s ease;
+}
+.turni-submenu.open {
+    display: flex;
+}
+.turni-submenu .sub-item {
+    font-size: 0.82rem !important;
+    padding: 0.4rem 0.7rem !important;
+    border-left: 2px solid var(--accent);
+    margin-left: 0.3rem;
+    border-radius: 0 6px 6px 0 !important;
+}
+.turni-submenu .sub-item:hover {
+    background: rgba(99, 102, 241, 0.08);
+}
+@keyframes submenuSlide {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes menuFadeIn {
     from { opacity: 0; transform: translateY(-6px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -1819,11 +1864,16 @@ header select option { background: #ffffff; color: var(--text-primary); }
                     <span></span><span></span><span></span>
                 </button>
                 <div class="header-menu-dropdown" id="header-menu-dropdown">
-                    <div class="menu-item shift-menu-item" onclick="openShiftUpload(); closeHeaderMenu();">
-                        <span>📅</span> Carica Turni Excel
+                    <div class="menu-item turni-toggle" onclick="toggleTurniSubmenu(event)">
+                        <span>📅</span> Turni <span class="turni-arrow" id="turni-arrow">▸</span>
                     </div>
-                    <div class="menu-item shift-menu-item" id="remove-shifts-menu" onclick="removeShiftsData(); closeHeaderMenu();" style="display:none;">
-                        <span>🗑️</span> Rimuovi Turni
+                    <div class="turni-submenu" id="turni-submenu">
+                        <div class="menu-item sub-item" onclick="openShiftUpload(); closeHeaderMenu();">
+                            <span>📤</span> Carica Excel
+                        </div>
+                        <div class="menu-item sub-item" id="remove-shifts-menu" onclick="removeShiftsData(); closeHeaderMenu();">
+                            <span>🗑️</span> Svuota Turni
+                        </div>
                     </div>
                     <div class="menu-divider"></div>
                     <select id="calendar-select" onchange="changeCalendar(this.value); closeHeaderMenu();" title="Seleziona calendario" style="display:none;">
@@ -2506,11 +2556,24 @@ function toggleHeaderMenu() {
     }
 }
 
+function toggleTurniSubmenu(e) {
+    e.stopPropagation();
+    var sub = document.getElementById('turni-submenu');
+    var arrow = document.getElementById('turni-arrow');
+    sub.classList.toggle('open');
+    arrow.classList.toggle('open');
+}
+
 function closeHeaderMenu() {
     const dropdown = document.getElementById('header-menu-dropdown');
     const toggle = document.getElementById('header-menu-toggle');
     dropdown.classList.remove('open');
     toggle.classList.remove('open');
+    // Reset turni submenu
+    var sub = document.getElementById('turni-submenu');
+    var arrow = document.getElementById('turni-arrow');
+    if (sub) sub.classList.remove('open');
+    if (arrow) arrow.classList.remove('open');
 }
 
 // Close menu when clicking outside
