@@ -3364,8 +3364,8 @@ function buildRankingHTML(container, ops, grandTotal, periodLabel) {
 
     // Period toggle
     html += '<div class="ranking-period-selector">';
-    html += '<button class="ranking-period-btn' + (rankingPeriod === 'month' ? ' active' : '') + '" onclick="setRankingPeriod('month')">📅 ' + MESI[currentMonth] + ' ' + currentYear + '</button>';
-    html += '<button class="ranking-period-btn' + (rankingPeriod === 'year'  ? ' active' : '') + '" onclick="setRankingPeriod('year')" >📆 Anno ' + chartsDisplayYear + '</button>';
+    html += `<button class="ranking-period-btn${rankingPeriod === 'month' ? ' active' : ''}" onclick="setRankingPeriod('month')">📅 ${MESI[currentMonth]} ${currentYear}</button>`;
+    html += `<button class="ranking-period-btn${rankingPeriod === 'year' ? ' active' : ''}" onclick="setRankingPeriod('year')" >📆 Anno ${chartsDisplayYear}</button>`;
     html += '</div>';
 
     // Total badge
