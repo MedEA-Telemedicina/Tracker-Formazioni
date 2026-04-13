@@ -2195,28 +2195,51 @@ function matchTeamsToOperator(teamsName) {
     var needle = teamsName.toLowerCase().replace(/[àáâãäå]/g,'a').replace(/[èéêë]/g,'e')
         .replace(/[ìíîï]/g,'i').replace(/[òóôõö]/g,'o').replace(/[ùúûü]/g,'u').trim();
     var ops = Object.values(OPERATORS);
+
+    // 1. Exact match (case-insensitive)
     for (var i = 0; i < ops.length; i++) {
         var opLower = ops[i].name.toLowerCase().trim();
         if (opLower === needle) return ops[i].name;
     }
+
+    // 2. One name contains the other fully
     for (var i = 0; i < ops.length; i++) {
         var opLower = ops[i].name.toLowerCase().trim();
         if (needle.indexOf(opLower) !== -1 || opLower.indexOf(needle) !== -1) return ops[i].name;
     }
+
+    // 3. Surname match (unique only — skip if multiple operators share the same surname)
     var needleParts = needle.split(/\s+/);
     var needleSurname = needleParts[needleParts.length - 1];
-    for (var i = 0; i < ops.length; i++) {
-        var opLower = ops[i].name.toLowerCase().trim();
-        var opParts = opLower.split(/\s+/);
-        var opSurname = opParts[opParts.length - 1];
-        if (opSurname === needleSurname && opSurname.length > 2) return ops[i].name;
+    if (needleSurname.length > 2) {
+        var surnameMatches = [];
+        for (var i = 0; i < ops.length; i++) {
+            var opLower = ops[i].name.toLowerCase().trim();
+            var opSurname = opLower.split(/\s+/).pop();
+            if (opSurname === needleSurname) surnameMatches.push(ops[i]);
+        }
+        if (surnameMatches.length === 1) return surnameMatches[0].name;
     }
-    var needleFirst = needleParts[0];
-    for (var i = 0; i < ops.length; i++) {
-        var opLower = ops[i].name.toLowerCase().trim();
-        var opParts = opLower.split(/\s+/);
-        if (opParts[0] === needleFirst && needleFirst.length > 2) return ops[i].name;
+
+    // 4. First + Last name match (at least 2 parts must match)
+    if (needleParts.length >= 2) {
+        for (var i = 0; i < ops.length; i++) {
+            var opLower = ops[i].name.toLowerCase().trim();
+            var opParts = opLower.split(/\s+/);
+            var matchCount = 0;
+            for (var n = 0; n < needleParts.length; n++) {
+                for (var o = 0; o < opParts.length; o++) {
+                    if (needleParts[n] === opParts[o] && needleParts[n].length > 2) {
+                        matchCount++;
+                        break;
+                    }
+                }
+            }
+            if (matchCount >= 2) return ops[i].name;
+        }
     }
+
+    // No single first-name match — too risky for collisions (e.g., two Antonios)
     return null;
 }
 
