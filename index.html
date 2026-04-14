@@ -3192,10 +3192,16 @@ function renderDashboard(data, grandTotal) {
     }
 
     grid.style.display = 'grid';
+    const alertGapSet = new Set();
     sortedOps.forEach((op, idx) => {
-        const card = createOperatorCard(op, grandTotal);
         const nextOp = sortedOps[idx + 1];
         if (nextOp && Math.abs(op.formations - nextOp.formations) >= 5) {
+            alertGapSet.add(nextOp);
+        }
+    });
+    sortedOps.forEach(op => {
+        const card = createOperatorCard(op, grandTotal);
+        if (alertGapSet.has(op)) {
             card.classList.add('alert-gap');
         }
         grid.appendChild(card);
