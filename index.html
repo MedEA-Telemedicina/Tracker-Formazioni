@@ -496,6 +496,18 @@ header select option { background: #ffffff; color: var(--text-primary); }
     color: var(--text-secondary);
 }
 
+/* Badge alert discreto sul numero dispositivi */
+.gap-alert-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    color: #c62828;
+    vertical-align: super;
+    margin-left: 3px;
+    opacity: 0.75;
+    cursor: default;
+    line-height: 1;
+}
+
 /* Scheda rossa: il gap con il successivo è ≥ 5 dispositivi */
 .operator-card.alert-gap {
     background: #fff5f5;
@@ -3193,16 +3205,26 @@ function renderDashboard(data, grandTotal) {
 
     grid.style.display = 'grid';
     const alertGapSet = new Set();
-    sortedOps.forEach((op, idx) => {
-        const nextOp = sortedOps[idx + 1];
-        if (nextOp && Math.abs(op.formations - nextOp.formations) >= 5) {
-            alertGapSet.add(nextOp);
-        }
-    });
+    const topOp = sortedOps[0];
+    if (topOp) {
+        sortedOps.forEach((op, idx) => {
+            if (idx > 0 && (topOp.formations - op.formations) >= 5) {
+                alertGapSet.add(op);
+            }
+        });
+    }
     sortedOps.forEach(op => {
         const card = createOperatorCard(op, grandTotal);
         if (alertGapSet.has(op)) {
             card.classList.add('alert-gap');
+            const countEl = card.querySelector('.formation-count');
+            if (countEl) {
+                const badge = document.createElement('span');
+                badge.className = 'gap-alert-badge';
+                badge.title = 'Distacco elevato rispetto al collega con più dispositivi formati';
+                badge.textContent = '⚠';
+                countEl.appendChild(badge);
+            }
         }
         grid.appendChild(card);
     });
