@@ -496,6 +496,23 @@ header select option { background: #ffffff; color: var(--text-primary); }
     color: var(--text-secondary);
 }
 
+/* Scheda rossa: il gap con il successivo è ≥ 5 dispositivi */
+.operator-card.alert-gap {
+    background: #fff5f5;
+    border-left-color: #e53e3e !important;
+    box-shadow: 0 2px 12px rgba(229, 62, 62, 0.18);
+}
+.operator-card.alert-gap .card-footer {
+    background: #fff0f0;
+    border-top-color: rgba(229, 62, 62, 0.2);
+}
+.operator-card.alert-gap .card-hint {
+    background: #fff0f0;
+}
+.operator-card.alert-gap.has-data:hover {
+    box-shadow: 0 6px 20px rgba(229, 62, 62, 0.28);
+}
+
 /* ============================================================
    MODAL POPUP
    ============================================================ */
@@ -3175,7 +3192,14 @@ function renderDashboard(data, grandTotal) {
     }
 
     grid.style.display = 'grid';
-    sortedOps.forEach(op => grid.appendChild(createOperatorCard(op, grandTotal)));
+    sortedOps.forEach((op, idx) => {
+        const card = createOperatorCard(op, grandTotal);
+        const nextOp = sortedOps[idx + 1];
+        if (nextOp && Math.abs(op.formations - nextOp.formations) >= 5) {
+            card.classList.add('alert-gap');
+        }
+        grid.appendChild(card);
+    });
 
     // Refresh shift badges on operator cards (only for weekly + current week)
     setTimeout(function() { refreshAbsenceIndicators(); }, 50);
