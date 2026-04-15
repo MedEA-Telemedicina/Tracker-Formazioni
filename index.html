@@ -3207,8 +3207,19 @@ function renderDashboard(data, grandTotal) {
 
     grid.style.display = 'grid';
 
-    // Il gap viene sempre calcolato sui dati mensili totali (currentData), non su quelli filtrati per settimana
-    const alertGapSet = new Set();
+    // Card rossa: gap calcolato sui dati del periodo corrente (settimanale se filtrato, altrimenti mensile)
+    const redCardSet = new Set();
+    const topOp = sortedOps[0];
+    if (topOp) {
+        sortedOps.forEach((op, idx) => {
+            if (idx > 0 && (topOp.formations - op.formations) >= 5) {
+                redCardSet.add(op);
+            }
+        });
+    }
+
+    // Badge ⚠: gap calcolato sempre sui dati mensili totali (currentData)
+    const alertBadgeSet = new Set();
     const monthlySource = (typeof currentData !== 'undefined' && currentData) ? currentData : data;
     const monthlyOps = Object.values(monthlySource.operators)
         .filter(op => op.colorId !== '7')
@@ -3218,14 +3229,17 @@ function renderDashboard(data, grandTotal) {
         monthlyOps.forEach((mOp, idx) => {
             if (idx > 0 && (topMonthly.formations - mOp.formations) >= 5) {
                 const match = sortedOps.find(o => o.colorId === mOp.colorId);
-                if (match) alertGapSet.add(match);
+                if (match) alertBadgeSet.add(match);
             }
         });
     }
+
     sortedOps.forEach(op => {
         const card = createOperatorCard(op, grandTotal);
-        if (alertGapSet.has(op)) {
+        if (redCardSet.has(op)) {
             card.classList.add('alert-gap');
+        }
+        if (alertBadgeSet.has(op)) {
             const nameEl = card.querySelector('h3');
             if (nameEl) {
                 const badge = document.createElement('span');
