@@ -1953,6 +1953,31 @@ header select option { background: #ffffff; color: var(--text-primary); }
     border-radius: 50%;
     animation: spin 0.6s linear infinite;
 }
+.remove-assoc-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+    margin-left: 6px;
+    background: transparent;
+    color: #aaa;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    vertical-align: middle;
+    line-height: 1;
+}
+.remove-assoc-btn:hover {
+    background: #fee2e2;
+    color: #c62828;
+    border-color: #ef9a9a;
+    transform: scale(1.12);
+}
 .modal-event-row {
     position: relative;
 }
@@ -3623,6 +3648,54 @@ async function assignEventToOperator(eventId, targetColorId, btnElement) {
     }
 }
 
+async function removeEventAssociation(eventId, btnElement) {
+    if (!accessToken || !eventId) return;
+
+    // Show spinner on the button
+    const origHTML = btnElement.innerHTML;
+    btnElement.innerHTML = '<span class="assign-spinner" style="border-color:rgba(0,0,0,0.2);border-top-color:#c62828"></span>';
+    btnElement.disabled = true;
+
+    try {
+        const url = 'https://www.googleapis.com/calendar/v3/calendars/'
+            + encodeURIComponent(selectedCalendarId)
+            + '/events/' + encodeURIComponent(eventId);
+
+        const resp = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ colorId: null })
+        });
+
+        if (resp.status === 401) {
+            tokenClient.requestAccessToken({ prompt: '' });
+            throw new Error('Token expired');
+        }
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error?.message || 'Errore API');
+        }
+
+        // Success! Close modal and reload
+        closeModal();
+        showLoading(true);
+        await loadEvents();
+        showLoading(false);
+
+        showToast('✅ Associazione rimossa — evento ripristinato al colore predefinito');
+
+    } catch (e) {
+        btnElement.innerHTML = origHTML;
+        btnElement.disabled = false;
+        if (e.message !== 'Token expired') {
+            showToast('❌ Errore: ' + e.message);
+        }
+    }
+}
+
 function showAssignDropdown(eventId, btnElement) {
     // Close any existing dropdown
     document.querySelectorAll('.assign-dropdown').forEach(d => d.remove());
@@ -3782,6 +3855,8 @@ function openDetailsModal(colorId) {
         const todayStr = new Date().toLocaleDateString('it-IT', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
+        const todayMidnight = new Date();
+        todayMidnight.setHours(0, 0, 0, 0);
         dayKeys.forEach(dayLabel => {
             const isToday = (dayLabel === todayStr);
             html += '<div class="modal-day-group">';
@@ -3789,6 +3864,7 @@ function openDetailsModal(colorId) {
                 + (isToday ? 'id="da-associare-today"' : '') + '>'
                 + dayLabel + '</div>';
             byDay[dayLabel].forEach(e => {
+                const isTodayOrFuture = e.start >= todayMidnight;
                 html += '<div class="modal-event-row">'
                     + '<div class="modal-event-num">' + globalIdx + '</div>'
                     + '<div class="modal-event-info">'
@@ -3803,7 +3879,10 @@ function openDetailsModal(colorId) {
                         ? '<button class="assign-btn" onclick="showAssignDropdown(\'' + e.id + '\', this)">\u{1F464} Assegna</button>'
                         : '<span class="modal-event-formations" style="background:' + op.hex + '">'
                         + e.formations + ' disp.'
-                        + '</span>')
+                        + '</span>'
+                        + (!isAssociare && e.id && isTodayOrFuture
+                            ? '<button class="remove-assoc-btn" onclick="removeEventAssociation(\'' + e.id + '\', this)" title="Rimuovi associazione operatore">\u2715</button>'
+                            : ''))
                     + '</div>'
                     + '</div>';
                 globalIdx++;
