@@ -1957,20 +1957,22 @@ header select option { background: #ffffff; color: var(--text-primary); }
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     margin-left: 6px;
+    padding: 0;
     background: transparent;
-    color: #aaa;
-    border: 1px solid #ccc;
+    color: #999;
+    border: 1.5px solid #ccc;
     border-radius: 50%;
-    font-size: 11px;
-    font-weight: 700;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
     cursor: pointer;
     transition: all 0.2s;
     flex-shrink: 0;
+    font-family: Arial, Helvetica, sans-serif;
     vertical-align: middle;
-    line-height: 1;
 }
 .remove-assoc-btn:hover {
     background: #fee2e2;
@@ -2205,7 +2207,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
         <!-- Drawer Header -->
         <div style="display:flex;align-items:center;justify-content:space-between;padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);flex-shrink:0;">
             <span style="font-size:1.15rem;font-weight:700;color:var(--text-primary);">📊 Grafici</span>
-            <button onclick="closeChartsDrawer(null)" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-secondary);line-height:1;" title="Chiudi">✕</button>
+            <button onclick="closeChartsDrawer(null)" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--text-secondary);line-height:1;" title="Chiudi">×</button>
         </div>
         <!-- Drawer Tabs -->
         <div id="charts-tabs" style="display:flex;gap:0;border-bottom:1px solid var(--border);flex-shrink:0;padding:0.5rem 0.75rem;background:rgba(66,133,244,0.04);">
@@ -2245,7 +2247,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
     <div class="chart-fullscreen-box">
         <div class="chart-fullscreen-header">
             <span class="chart-fullscreen-title" id="chart-fullscreen-title">📊 Grafico</span>
-            <button class="chart-fullscreen-close" onclick="closeFullscreenChart()" title="Chiudi (Esc)">✕</button>
+            <button class="chart-fullscreen-close" onclick="closeFullscreenChart()" title="Chiudi (Esc)">×</button>
         </div>
         <div class="chart-fullscreen-body">
             <img id="chart-fullscreen-img" src="" alt="Grafico a schermo intero">
@@ -2262,7 +2264,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
                 <h3>Cerca Formazione</h3>
                 <span>Ricerca per nome cliente su tutti i dati disponibili</span>
             </div>
-            <button class="modal-close" onclick="closeSearchModal()" title="Chiudi">✕</button>
+            <button class="modal-close" onclick="closeSearchModal()" title="Chiudi">×</button>
         </div>
         <div class="search-input-wrap">
             <input type="text" id="search-input" placeholder="Inserisci nome cliente..." autocomplete="off"
@@ -2283,7 +2285,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
                 <span id="modal-op-color">–</span>
             </div>
             <span class="modal-period-badge" id="modal-period-badge">–</span>
-            <button class="modal-close" onclick="closeModal()" title="Chiudi">✕</button>
+            <button class="modal-close" onclick="closeModal()" title="Chiudi">×</button>
         </div>
         <div class="modal-stats">
             <div class="modal-stat">
@@ -4059,7 +4061,7 @@ function showError(message) {
     const toast = document.createElement('div');
     toast.className = 'error-toast';
     toast.innerHTML = '<span>' + escapeHtml(message) + '</span>'
-        + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;margin-left:1rem;">✕</button>';
+        + '<button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;font-size:1.2rem;cursor:pointer;margin-left:1rem;">×</button>';
     document.body.appendChild(toast);
     setTimeout(() => { if (toast.parentElement) toast.remove(); }, 6000);
 }
