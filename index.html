@@ -1100,7 +1100,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
 
 .dbg-ev-row:last-child { border-bottom: none; }
 
-.dbg-ev-row.dbg-ev-pavone {
+.dbg-ev-row.dbg-ev-cobalto {
     background: #e3f4ff;
 }
 
@@ -2158,7 +2158,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
         </div>
         <div class="summary-item da-associare-item" id="da-associare-summary" onclick="openDaAssociareModal()" title="Mostra formazioni da associare">
             <span class="summary-label">Da Associare</span>
-            <span class="summary-value" id="da-associare-count" style="color:#039BE5">–</span>
+            <span class="summary-value" id="da-associare-count" style="color:#9fc6e7">–</span>
         </div>
     </div>
 
@@ -2296,14 +2296,14 @@ const OPERATORS = {
     '5':  { name: 'ANTONIO EQUESTRE',    colorName: 'Banana',      hex: '#F6BF26' },
     '2':  { name: 'CARMINE CALOCERO',    colorName: 'Salvia',      hex: '#33B679' },
     '9':  { name: 'WILLIAM POTENZA',     colorName: 'Mirtillo',    hex: '#3F51B5' },
-    '7':  { name: 'Da Associare',        colorName: 'Pavone',      hex: '#039BE5' },
+    '15': { name: 'Da Associare',        colorName: 'Cobalto',     hex: '#9fc6e7' },
     '1':  { name: 'ANGELA LIONE',        colorName: 'Lavanda',     hex: '#7986CB' },
     '3':  { name: 'ROSY PIA CAVUOTI',    colorName: 'Vinaccia',    hex: '#8E24AA' },
     '8':  { name: 'GIANMARCO PALAZZO',   colorName: 'Grafite',     hex: '#616161' },
 };
 
-// Varianti hex aggiuntive per il colore Pavone (Google Calendar può restituire varianti leggermente diverse)
-const PAVONE_HEX_VARIANTS = ['#039be5', '#039BE5', '#4986E7', '#4986e7', '#00AEFF', '#00aeff', '#9fe1e7', '#9FE1E7'];
+// Varianti hex aggiuntive per il colore Cobalto (Google Calendar può restituire varianti leggermente diverse)
+const COBALTO_HEX_VARIANTS = ['#9fc6e7', '#9FC6E7'];
 
 const MESI = [
     'Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno',
@@ -3102,7 +3102,7 @@ function applyPeriodFilter() {
  * - Se l'evento ha un colorId esplicito, lo usa.
  * - Altrimenti, se il calendario selezionato ha un backgroundColor
  *   che corrisponde a uno degli operatori, usa quel colorId.
- *   Questo permette di catturare gli eventi "Pavone" anche quando
+ *   Questo permette di catturare gli eventi "Cobalto" anche quando
  *   il colore è ereditato dal calendario e non impostato sull'evento.
  */
 function resolveColorId(event) {
@@ -3117,8 +3117,8 @@ function resolveColorId(event) {
         for (const [colorId, op] of Object.entries(OPERATORS)) {
             if (op.hex.toLowerCase() === bg) return colorId;
         }
-        // Controlla anche le varianti note del colore Pavone
-        if (PAVONE_HEX_VARIANTS.map(v => v.toLowerCase()).includes(bg)) {
+        // Controlla anche le varianti note del colore Cobalto
+        if (COBALTO_HEX_VARIANTS.map(v => v.toLowerCase()).includes(bg)) {
             return '7';
         }
     }
@@ -3219,31 +3219,31 @@ function renderDashboard(data, grandTotal) {
     document.getElementById('total-events').textContent     = data.totalEvents;
 
     // "Da Associare" usa SEMPRE i dati del mese intero (currentData), non quelli filtrati per settimana
-    // Così gli eventi Pavone in altri giorni non spariscono quando è auto-selezionata la settimana corrente
-    const pavoneMonthOp = (typeof currentData !== 'undefined' && currentData)
-        ? currentData.operators['7']
-        : data.operators['7'];
+    // Così gli eventi Cobalto in altri giorni non spariscono quando è auto-selezionata la settimana corrente
+    const cobaltoMonthOp = (typeof currentData !== 'undefined' && currentData)
+        ? currentData.operators['15']
+        : data.operators['15'];
     // Da Associare usa SEMPRE i dati del mese intero — NON filtrare per settimana
     // (quando si apre il mese corrente viene auto-selezionata la settimana corrente,
-    //  quindi usare filteredData causerebbe 0 se gli eventi Pavone sono in un'altra settimana)
-    const daAssociareCount = pavoneMonthOp ? pavoneMonthOp.eventCount : 0;
+    //  quindi usare filteredData causerebbe 0 se gli eventi Cobalto sono in un'altra settimana)
+    const daAssociareCount = cobaltoMonthOp ? cobaltoMonthOp.eventCount : 0;
     document.getElementById('da-associare-count').textContent = daAssociareCount;
 
     const grid = document.getElementById('operators-grid');
     grid.innerHTML = '';
 
-    // Escludi Pavone ('7') dalla griglia delle card
-    const sortedOps = Object.values(data.operators).filter(op => op.colorId !== '7').sort((a, b) => {
+    // Escludi Cobalto ('15') dalla griglia delle card
+    const sortedOps = Object.values(data.operators).filter(op => op.colorId !== '15').sort((a, b) => {
         if (b.formations !== a.formations) return b.formations - a.formations;
         return a.name.localeCompare(b.name);
     });
 
-    // Calcola totalEvents escludendo Pavone per il messaggio "nessuna formazione"
-    // IMPORTANTE: usa il conteggio Pavone del periodo filtrato (data), NON del mese intero (currentData).
-    // Usare currentData causava bug: se ci sono eventi Pavone in altre settimane ma non in quella
+    // Calcola totalEvents escludendo Cobalto per il messaggio "nessuna formazione"
+    // IMPORTANTE: usa il conteggio Cobalto del periodo filtrato (data), NON del mese intero (currentData).
+    // Usare currentData causava bug: se ci sono eventi Cobalto in altre settimane ma non in quella
     // selezionata, la sottrazione dava 0 e le card degli operatori sparivano.
-    const filteredPavoneOp = data.operators['7'];
-    const gridEvents = data.totalEvents - (filteredPavoneOp ? filteredPavoneOp.eventCount : 0);
+    const filteredCobaltoOp = data.operators['15'];
+    const gridEvents = data.totalEvents - (filteredCobaltoOp ? filteredCobaltoOp.eventCount : 0);
 
     if (gridEvents === 0 && daAssociareCount > 0) {
         const label = selectedWeek === 0
@@ -3288,7 +3288,7 @@ function renderDashboard(data, grandTotal) {
     const alertBadgeSet = new Set();
     const monthlySource = (typeof currentData !== 'undefined' && currentData) ? currentData : data;
     const monthlyOps = Object.values(monthlySource.operators)
-        .filter(op => op.colorId !== '7')
+        .filter(op => op.colorId !== '15')
         .sort((a, b) => b.formations - a.formations);
     const topMonthly = monthlyOps[0];
     if (topMonthly) {
@@ -3629,7 +3629,7 @@ function showAssignDropdown(eventId, btnElement) {
     
     // Add all operators except "Da Associare" (colorId 7)
     Object.entries(OPERATORS).forEach(([colorId, op]) => {
-        if (colorId === '7') return; // skip "Da Associare" itself
+        if (colorId === '15') return; // skip "Da Associare" itself
         const item = document.createElement('div');
         item.className = 'assign-dropdown-item';
         item.innerHTML = '<span class="assign-dropdown-dot" style="background:' + op.hex + '"></span>'
@@ -3683,18 +3683,18 @@ function showToast(message) {
 
 function buildDaAssociareDebugPanel() {
     const totalRaw   = allMonthEvents.length;
-    const withCid7   = allMonthEvents.filter(e => String(e.colorId) === '7').length;
+    const withCid7   = allMonthEvents.filter(e => String(e.colorId) === '15').length;
     const noCid      = allMonthEvents.filter(e => e.colorId === undefined || e.colorId === null).length;
-    const resolvedAs7 = allMonthEvents.filter(e => resolveColorId(e) === '7' && e.status !== 'cancelled').length;
+    const resolvedAs7 = allMonthEvents.filter(e => resolveColorId(e) === '15' && e.status !== 'cancelled').length;
     const calBg      = selectedCalendarBgColor || '<em style="color:#bbb">non disponibile</em>';
 
     let html = '<div class="dbg-panel">';
-    html += '<div class="dbg-title">🔍 Debug — nessun evento Pavone trovato</div>';
+    html += '<div class="dbg-title">🔍 Debug — nessun evento Cobalto trovato</div>';
 
     html += '<div class="dbg-stats">';
     html += '<div class="dbg-stat"><span class="dbg-lbl">Tot. eventi nel mese</span><span class="dbg-val">' + totalRaw + '</span></div>';
-    html += '<div class="dbg-stat"><span class="dbg-lbl">Con colorId = 7 (Pavone)</span><span class="dbg-val" style="color:#039BE5">' + withCid7 + '</span></div>';
-    html += '<div class="dbg-stat"><span class="dbg-lbl">Risolti come Pavone</span><span class="dbg-val" style="color:#039BE5">' + resolvedAs7 + '</span></div>';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Con colorId = 15 (Cobalto)</span><span class="dbg-val" style="color:#9fc6e7">' + withCid7 + '</span></div>';
+    html += '<div class="dbg-stat"><span class="dbg-lbl">Risolti come Cobalto</span><span class="dbg-val" style="color:#9fc6e7">' + resolvedAs7 + '</span></div>';
     html += '<div class="dbg-stat"><span class="dbg-lbl">Senza colorId (ereditano colore calendario)</span><span class="dbg-val">' + noCid + '</span></div>';
     html += '<div class="dbg-stat" style="grid-column:1/-1"><span class="dbg-lbl">Colore del calendario selezionato (backgroundColor)</span><span class="dbg-val">' + (selectedCalendarBgColor ? '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + escapeHtml(selectedCalendarBgColor) + ';margin-right:6px;vertical-align:middle"></span>' + escapeHtml(selectedCalendarBgColor) : '<em style="color:#bbb">non disponibile</em>') + '</span></div>';
     html += '</div>';
@@ -3708,8 +3708,8 @@ function buildDaAssociareDebugPanel() {
             const resolved = resolveColorId(e) || '–';
             const title    = e.summary || '(senza titolo)';
             const dateStr  = (e.start && (e.start.dateTime || e.start.date)) ? (e.start.dateTime || e.start.date).substring(0, 10) : '?';
-            const isPavone = resolved === '7';
-            html += '<div class="dbg-ev-row' + (isPavone ? ' dbg-ev-pavone' : '') + '">';
+            const isCobalto = resolved === '15';
+            html += '<div class="dbg-ev-row' + (isCobalto ? ' dbg-ev-cobalto' : '') + '">';
             html += '<span class="dbg-ev-n">' + (i + 1) + '</span>';
             html += '<span class="dbg-ev-cid" title="colorId grezzo → risolto">cid <strong>' + escapeHtml(cid) + '</strong><em>→' + escapeHtml(resolved) + '</em></span>';
             html += '<span class="dbg-ev-title">' + escapeHtml(title) + '</span>';
@@ -3721,14 +3721,14 @@ function buildDaAssociareDebugPanel() {
         html += '<p style="text-align:center;color:#bbb;font-size:0.8rem;margin-top:1rem;">Nessun evento nel mese — il calendario potrebbe essere vuoto o la richiesta API non ha restituito risultati.</p>';
     }
 
-    html += '<p class="dbg-hint">💡 Se ci sono eventi con <em>nessun colorId</em> e il calendario ha il colore Pavone (#039BE5) come backgroundColor, verranno catturati automaticamente. Se il colore non corrisponde, aggiorna la mappatura <code>PAVONE_HEX_VARIANTS</code>.</p>';
+    html += '<p class="dbg-hint">💡 Se ci sono eventi con <em>nessun colorId</em> e il calendario ha il colore Cobalto (#9fc6e7) come backgroundColor, verranno catturati automaticamente. Se il colore non corrisponde, aggiorna la mappatura <code>COBALTO_HEX_VARIANTS</code>.</p>';
     html += '</div>';
     return html;
 }
 
 function openDetailsModal(colorId) {
-    // Per "Da Associare" (Pavone, colorId='7') usa sempre i dati del mese intero
-    const dataSource = (colorId === '7' && currentData) ? currentData : filteredData;
+    // Per "Da Associare" (Cobalto, colorId='15') usa sempre i dati del mese intero
+    const dataSource = (colorId === '15' && currentData) ? currentData : filteredData;
     const op = dataSource ? dataSource.operators[colorId] : null;
     if (!op) return;
 
@@ -3736,8 +3736,8 @@ function openDetailsModal(colorId) {
     document.getElementById('modal-op-name').textContent  = op.name;
     document.getElementById('modal-op-color').textContent = op.colorName;
 
-    // Pavone mostra sempre il badge del mese intero
-    const periodLabel = (colorId === '7')
+    // Cobalto mostra sempre il badge del mese intero
+    const periodLabel = (colorId === '15')
         ? MESI[currentMonth] + ' ' + currentYear
         : (selectedWeek === 0
             ? MESI[currentMonth] + ' ' + currentYear
@@ -3752,8 +3752,8 @@ function openDetailsModal(colorId) {
     const listEl = document.getElementById('modal-events-list');
 
     if (op.events.length === 0) {
-        // Se Da Associare (Pavone) ha 0 eventi, mostra il pannello di debug
-        if (colorId === '7') {
+        // Se Da Associare (Cobalto) ha 0 eventi, mostra il pannello di debug
+        if (colorId === '15') {
             listEl.innerHTML = buildDaAssociareDebugPanel();
         } else {
             listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
@@ -3775,7 +3775,7 @@ function openDetailsModal(colorId) {
 
         let html = '';
         let globalIdx = 1;
-        const isAssociare = (colorId === '7');
+        const isAssociare = (colorId === '15');
         const todayStr = new Date().toLocaleDateString('it-IT', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
@@ -4538,7 +4538,7 @@ async function renderRankingView() {
                 return;
             }
             opsData = Object.values(data.operators)
-                .filter(op => op.colorId !== '7')
+                .filter(op => op.colorId !== '15')
                 .map(op => ({ name: op.name, hex: op.hex, formations: op.formations, hours: op.totalMinutes, events: op.eventCount }))
                 .sort((a, b) => b.formations - a.formations);
             grandTotal  = opsData.reduce((s, o) => s + o.formations, 0);
