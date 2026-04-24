@@ -3106,7 +3106,7 @@ function applyPeriodFilter() {
  *   il colore è ereditato dal calendario e non impostato sull'evento.
  */
 function resolveColorId(event) {
-    // colorId esplicito sull'evento (stringa "7", oppure number 7)
+    // colorId esplicito sull'evento (stringa "15", oppure number 15)
     if (event.colorId !== undefined && event.colorId !== null) {
         return String(event.colorId);
     }
@@ -3119,7 +3119,7 @@ function resolveColorId(event) {
         }
         // Controlla anche le varianti note del colore Cobalto
         if (COBALTO_HEX_VARIANTS.map(v => v.toLowerCase()).includes(bg)) {
-            return '7';
+            return '15';
         }
     }
 
