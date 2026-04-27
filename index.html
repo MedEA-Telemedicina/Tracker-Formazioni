@@ -3224,15 +3224,9 @@ function renderDashboard(data, grandTotal) {
     document.getElementById('total-hours').textContent      = formatHours(data.totalMinutes);
     document.getElementById('total-events').textContent     = data.totalEvents;
 
-    // "Da Associare" usa SEMPRE i dati del mese intero (currentData), non quelli filtrati per settimana
-    // Così gli eventi Cobalto in altri giorni non spariscono quando è auto-selezionata la settimana corrente
-    const cobaltoMonthOp = (typeof currentData !== 'undefined' && currentData)
-        ? currentData.operators['15']
-        : data.operators['15'];
-    // Da Associare usa SEMPRE i dati del mese intero — NON filtrare per settimana
-    // (quando si apre il mese corrente viene auto-selezionata la settimana corrente,
-    //  quindi usare filteredData causerebbe 0 se gli eventi Cobalto sono in un'altra settimana)
-    const daAssociareCount = cobaltoMonthOp ? cobaltoMonthOp.eventCount : 0;
+    // "Da Associare" usa i dati filtrati per settimana (se selezionata), altrimenti il mese intero
+    const cobaltoFilteredOp = data.operators['15'];
+    const daAssociareCount = cobaltoFilteredOp ? cobaltoFilteredOp.eventCount : 0;
     document.getElementById('da-associare-count').textContent = daAssociareCount;
 
     const grid = document.getElementById('operators-grid');
@@ -3511,7 +3505,7 @@ function renderSearchResults(events, query) {
 }
 
 function openDaAssociareModal() {
-    openDetailsModal('7');
+    openDetailsModal('15');
     // Scroll to today after modal fully renders
     setTimeout(() => {
         const listEl = document.getElementById('modal-events-list');
@@ -3733,8 +3727,8 @@ function buildDaAssociareDebugPanel() {
 }
 
 function openDetailsModal(colorId) {
-    // Per "Da Associare" (Cobalto, colorId='15') usa sempre i dati del mese intero
-    const dataSource = (colorId === '15' && currentData) ? currentData : filteredData;
+    // Usa i dati filtrati per settimana (se selezionata) per tutti gli operatori incluso Cobalto
+    const dataSource = filteredData || currentData;
     const op = dataSource ? dataSource.operators[colorId] : null;
     if (!op) return;
 
@@ -3742,12 +3736,10 @@ function openDetailsModal(colorId) {
     document.getElementById('modal-op-name').textContent  = op.name;
     document.getElementById('modal-op-color').textContent = op.colorName;
 
-    // Cobalto mostra sempre il badge del mese intero
-    const periodLabel = (colorId === '15')
+    // Badge periodo: mostra settimana selezionata o mese intero
+    const periodLabel = (selectedWeek === 0)
         ? MESI[currentMonth] + ' ' + currentYear
-        : (selectedWeek === 0
-            ? MESI[currentMonth] + ' ' + currentYear
-            : weeksInMonth[selectedWeek - 1].label);
+        : weeksInMonth[selectedWeek - 1].label;
     document.getElementById('modal-period-badge').textContent = periodLabel;
 
     document.getElementById('modal-formations').textContent = op.formations;
