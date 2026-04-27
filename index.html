@@ -3106,15 +3106,20 @@ function applyPeriodFilter() {
  *   il colore è ereditato dal calendario e non impostato sull'evento.
  */
 function resolveColorId(event) {
-    // colorId esplicito sull'evento (stringa "15", oppure number 15)
+    // colorId esplicito sull'evento (stringa, es. "1"–"11")
     if (event.colorId !== undefined && event.colorId !== null) {
-        return String(event.colorId);
+        const cid = String(event.colorId);
+        // Se il colorId corrisponde a un operatore noto, usalo
+        if (OPERATORS[cid]) return cid;
+        // Altrimenti è un colore non mappato → Da Associare
+        return '15';
     }
 
     // Nessun colorId esplicito: prova a ricavarlo dal colore del calendario
     if (selectedCalendarBgColor) {
         const bg = selectedCalendarBgColor.toLowerCase();
         for (const [colorId, op] of Object.entries(OPERATORS)) {
+            if (colorId === '15') continue; // salta Da Associare nel match calendario
             if (op.hex.toLowerCase() === bg) return colorId;
         }
         // Controlla anche le varianti note del colore Cobalto
@@ -3123,7 +3128,8 @@ function resolveColorId(event) {
         }
     }
 
-    return null;
+    // Nessun colorId e nessun match calendario → Da Associare
+    return '15';
 }
 
 function calculateFormations(events) {
@@ -3627,7 +3633,7 @@ function showAssignDropdown(eventId, btnElement) {
     const dropdown = document.createElement('div');
     dropdown.className = 'assign-dropdown';
     
-    // Add all operators except "Da Associare" (colorId 7)
+    // Add all operators except "Da Associare" (colorId 15)
     Object.entries(OPERATORS).forEach(([colorId, op]) => {
         if (colorId === '15') return; // skip "Da Associare" itself
         const item = document.createElement('div');
@@ -4068,9 +4074,9 @@ function renderWeeklyChart() {
         return;
     }
 
-    // Compute formations per operator per week (exclude colorId '7')
+    // Compute formations per operator per week (exclude colorId '15' = Da Associare)
     const ops = Object.entries(OPERATORS)
-        .filter(([cid]) => cid !== '7')
+        .filter(([cid]) => cid !== '15')
         .map(([cid, op]) => ({ colorId: cid, name: op.name.split(' ')[0], hex: op.hex }));
 
     const labels = weeks.map((w, i) => 'Sett.' + (i + 1));
@@ -4179,7 +4185,7 @@ async function renderMonthlyChart() {
     chartsShowLoader(false);
 
     const ops = Object.entries(OPERATORS)
-        .filter(([cid]) => cid !== '7')
+        .filter(([cid]) => cid !== '15')
         .map(([cid, op]) => ({ colorId: cid, name: op.name.split(' ')[0], hex: op.hex }));
 
     const labels = MESI.map(m => m.substring(0, 3));
@@ -4276,7 +4282,7 @@ async function renderAnnualChart() {
     document.getElementById('chart-extra').style.display = 'block';
 
     const ops = Object.entries(OPERATORS)
-        .filter(([cid]) => cid !== '7')
+        .filter(([cid]) => cid !== '15')
         .map(([cid, op]) => ({
             colorId: cid,
             name: op.name.split(' ').slice(0,2).join(' '),
@@ -4560,14 +4566,14 @@ async function renderRankingView() {
             rankDiv.style.display = 'block';
 
             const opMap = {};
-            Object.entries(OPERATORS).filter(([cid]) => cid !== '7').forEach(([cid, op]) => {
+            Object.entries(OPERATORS).filter(([cid]) => cid !== '15').forEach(([cid, op]) => {
                 opMap[cid] = { name: op.name, hex: op.hex, colorId: cid, formations: 0, hours: 0, events: 0 };
             });
             for (let m = 0; m < 12; m++) {
                 const md = yearData[m];
                 if (!md) continue;
                 Object.entries(md.operators).forEach(([cid, op]) => {
-                    if (cid === '7' || !opMap[cid]) return;
+                    if (cid === '15' || !opMap[cid]) return;
                     opMap[cid].formations += op.formations;
                     opMap[cid].hours      += op.totalMinutes;
                     opMap[cid].events     += op.eventCount;
