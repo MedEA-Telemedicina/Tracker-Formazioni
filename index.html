@@ -3657,7 +3657,7 @@ async function unassignEvent(eventId, btnElement) {
                 'Authorization': 'Bearer ' + accessToken,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ colorId: '15' })
+            body: JSON.stringify({ colorId: null })
         });
 
         if (resp.status === 401) {
