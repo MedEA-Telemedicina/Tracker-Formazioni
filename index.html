@@ -1956,6 +1956,24 @@ header select option { background: #ffffff; color: var(--text-primary); }
 .modal-event-row {
     position: relative;
 }
+.unassign-btn {
+    background: linear-gradient(135deg, #e53935, #c62828);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    margin-left: 6px;
+    line-height: 1;
+}
+.unassign-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 3px 12px rgba(229,57,53,0.4);
+}
 
 
 .ranking-item.podium-clickable { cursor: pointer; position: relative; }
@@ -2158,7 +2176,7 @@ header select option { background: #ffffff; color: var(--text-primary); }
         </div>
         <div class="summary-item da-associare-item" id="da-associare-summary" onclick="openDaAssociareModal()" title="Mostra formazioni da associare">
             <span class="summary-label">Da Associare</span>
-            <span class="summary-value" id="da-associare-count" style="color:#9fc6e7">–</span>
+            <span class="summary-value" id="da-associare-count" style="color:#1565C0">–</span>
         </div>
     </div>
 
@@ -3620,6 +3638,52 @@ async function assignEventToOperator(eventId, targetColorId, btnElement) {
     }
 }
 
+async function unassignEvent(eventId, btnElement) {
+    if (!accessToken || !eventId) return;
+    if (!confirm('Vuoi rimuovere l\'associazione di questo evento?\nL\'evento tornerà in "Da Associare".')) return;
+
+    const origHTML = btnElement.innerHTML;
+    btnElement.innerHTML = '<span class="assign-spinner"></span>';
+    btnElement.disabled = true;
+
+    try {
+        const url = 'https://www.googleapis.com/calendar/v3/calendars/'
+            + encodeURIComponent(selectedCalendarId)
+            + '/events/' + encodeURIComponent(eventId);
+
+        const resp = await fetch(url, {
+            method: 'PATCH',
+            headers: {
+                'Authorization': 'Bearer ' + accessToken,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ colorId: '15' })
+        });
+
+        if (resp.status === 401) {
+            tokenClient.requestAccessToken({ prompt: '' });
+            throw new Error('Token expired');
+        }
+        if (!resp.ok) {
+            const err = await resp.json();
+            throw new Error(err.error?.message || 'Errore API');
+        }
+
+        closeModal();
+        showLoading(true);
+        await loadEvents();
+        showLoading(false);
+        showToast('↩️ Evento riportato in "Da Associare"');
+
+    } catch (e) {
+        btnElement.innerHTML = origHTML;
+        btnElement.disabled = false;
+        if (e.message !== 'Token expired') {
+            showToast('❌ Errore: ' + e.message);
+        }
+    }
+}
+
 function showAssignDropdown(eventId, btnElement) {
     // Close any existing dropdown
     document.querySelectorAll('.assign-dropdown').forEach(d => d.remove());
@@ -3750,12 +3814,7 @@ function openDetailsModal(colorId) {
     const listEl = document.getElementById('modal-events-list');
 
     if (op.events.length === 0) {
-        // Se Da Associare (Cobalto) ha 0 eventi, mostra il pannello di debug
-        if (colorId === '15') {
-            listEl.innerHTML = buildDaAssociareDebugPanel();
-        } else {
-            listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
-        }
+        listEl.innerHTML = '<div class="modal-empty">Nessun evento nel periodo selezionato.</div>';
     } else {
         // Ordina per data
         const sorted = [...op.events].sort((a, b) => a.start - b.start);
@@ -3774,6 +3833,7 @@ function openDetailsModal(colorId) {
         let html = '';
         let globalIdx = 1;
         const isAssociare = (colorId === '15');
+        const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
         const todayStr = new Date().toLocaleDateString('it-IT', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
         });
@@ -3798,7 +3858,10 @@ function openDetailsModal(colorId) {
                         ? '<button class="assign-btn" onclick="showAssignDropdown(\'' + e.id + '\', this)">\u{1F464} Assegna</button>'
                         : '<span class="modal-event-formations" style="background:' + op.hex + '">'
                         + e.formations + ' disp.'
-                        + '</span>')
+                        + '</span>'
+                        + ((!isAssociare && e.id && e.start >= todayStart)
+                            ? '<button class="unassign-btn" onclick="unassignEvent(\'' + e.id + '\', this)" title="Rimuovi associazione">✕</button>'
+                            : ''))
                     + '</div>'
                     + '</div>';
                 globalIdx++;
