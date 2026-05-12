@@ -408,7 +408,8 @@ header select option { background: #ffffff; color: var(--text-primary); }
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
-.card-title h3 { font-size: 0.88rem; font-weight: 700; line-height: 1.3; letter-spacing: 0.02em; }
+.card-title { overflow: hidden; min-width: 0; }
+.card-title h3 { font-size: 0.88rem; font-weight: 700; line-height: 1.3; letter-spacing: 0.02em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .color-name {
     font-size: 0.72rem;
@@ -2318,7 +2319,7 @@ const OPERATORS = {
     '1':  { name: 'ANGELA LIONE',        colorName: 'Lavanda',     hex: '#7986CB' },
     '3':  { name: 'ROSY PIA CAVUOTI',    colorName: 'Vinaccia',    hex: '#8E24AA' },
     '8':  { name: 'GIANMARCO PALAZZO',   colorName: 'Grafite',     hex: '#616161' },
-    '7':  { name: 'ANTONELLO GUGLIOTTI', colorName: 'Pavone',      hex: '#42d692' },
+    '7':  { name: 'ANTONELLO GUGLIOTTI', colorName: 'Pavone',      hex: '#039BE5' },
 };
 
 // Varianti hex aggiuntive per il colore Cobalto (Google Calendar può restituire varianti leggermente diverse)
